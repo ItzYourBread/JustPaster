@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const { marked } = require('marked');
 const highlightjs = require('highlight.js');
+const dotenv = require("dotenv");
 const app = express();
 const port = 3000;
 
@@ -11,8 +12,16 @@ app.use(bodyParser.json()); // for parsing application/json
 app.set('view engine', 'ejs');
 app.use(express.static('public')); // for serving static CSS and JS
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_DB);
+dotenv.config();
+
+mongoose
+    .connect(process.env.MONGO_URL)
+    .then(() => {
+        console.log("Connected to DB");
+    })
+    .catch((err) => {
+        throw err;
+    });
 
 // Generate a random ID of 6 characters
 function generateId(length) {
