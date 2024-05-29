@@ -12,7 +12,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('public')); // for serving static CSS and JS
 
 // Connect to MongoDB
-mongoose.connect('mongodb://0.0.0.0/test');
+mongoose.connect(process.env.MONGO_DB);
 
 // Generate a random ID of 6 characters
 function generateId(length) {
