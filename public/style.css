@@ -75,3 +75,33 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .container {
+    width: 95%;
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  textarea {
+    width: 100%;
+  }
+
+  button {
+    padding: 8px;
+  }
+
+  .ad-space {
+    padding: 5px;
+    margin-top: 15px;
+  }
+
+  .markdown-content {
+    padding: 8px;
+  }
+
+  pre {
+    padding: 8px;
+  }
+}

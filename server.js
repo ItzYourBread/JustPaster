@@ -56,13 +56,13 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.post('/paste', async (req, res) => {
+app.post('/', async (req, res) => {
   const newPaste = new Paste({ content: req.body.content });
   await newPaste.save();
-  res.redirect(`/paste/${newPaste.id}`);
+  res.redirect(`/${newPaste.id}`);
 });
 
-app.get('/paste/:id', async (req, res) => {
+app.get('/:id', async (req, res) => {
   const paste = await Paste.findById(req.params.id);
   if (paste) {
     paste.views++;
