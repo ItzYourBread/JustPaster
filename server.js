@@ -90,5 +90,5 @@ app.get('/api/paste/:id/views', async (req, res) => {
 });
 
 app.listen(process.env.PORT, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${process.env.PORT}`);
 });
