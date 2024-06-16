@@ -5,7 +5,6 @@ const { marked } = require('marked');
 const highlightjs = require('highlight.js');
 const dotenv = require("dotenv");
 const app = express();
-const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // for parsing application/json
