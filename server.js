@@ -14,13 +14,13 @@ app.use(express.static('public')); // for serving static CSS and JS
 dotenv.config();
 
 mongoose
-    .connect(process.env.MONGO_URL)
-    .then(() => {
-        console.log("Connected to DB");
-    })
-    .catch((err) => {
-        throw err;
-    });
+  .connect(process.env.MONGO_URL)
+  .then(() => {
+    console.log("Connected to DB");
+  })
+  .catch((err) => {
+    throw err;
+  });
 
 // Generate a random ID of 6 characters
 function generateId(length) {
