@@ -1,11 +1,9 @@
-/* General styles */
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: Arial, sans-serif;
   background-color: #121212;
   color: #e0e0e0;
   margin: 0;
   padding: 0;
-  line-height: 1.6;
 }
 
 .container {
@@ -16,35 +14,21 @@ body {
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   margin-top: 50px;
-  border-radius: 8px;
 }
 
-header, footer {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-header h1 {
-  color: #bb86fc;
-  font-size: 2.5em;
-}
-
-main h2 {
+h1 {
   text-align: center;
   color: #bb86fc;
-  font-size: 1.5em;
-  margin-bottom: 20px;
 }
 
 textarea {
   width: 97%;
   background-color: #2c2c2c;
   color: #e0e0e0;
-  border: 1px solid #444;
+  border: none;
   padding: 10px;
   margin-bottom: 10px;
-  font-family: 'Courier New', monospace;
-  border-radius: 5px;
+  font-family: monospace;
 }
 
 button {
@@ -56,20 +40,24 @@ button {
   border: none;
   cursor: pointer;
   margin-top: 10px;
-  border-radius: 5px;
-  font-size: 1.1em;
 }
 
 button:hover {
   background-color: #9a67ea;
 }
 
+.ad-space {
+  text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #2c2c2c;
+  border: 1px solid #bb86fc;
+}
+
 .markdown-content {
   background-color: #2c2c2c;
   padding: 10px;
   border-radius: 5px;
-  overflow: auto;
-  margin-bottom: 20px;
 }
 
 pre {
@@ -88,13 +76,6 @@ a:hover {
   text-decoration: underline;
 }
 
-.views {
-  text-align: center;
-  margin-top: 10px;
-  font-size: 1.1em;
-  color: #bbb;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -104,17 +85,22 @@ a:hover {
   }
 
   textarea {
-    font-size: 1em;
+    width: 91%;
   }
 
   button {
-    padding: 12px;
-    font-size: 1em;
+    padding: 8px;
+    width: 96%;
+  }
+
+  .ad-space {
+    padding: 5px;
+    margin-top: 15px;
   }
 
   .markdown-content {
     padding: 8px;
-    width: 90%;
+    width: 91%;
   }
 
   pre {
