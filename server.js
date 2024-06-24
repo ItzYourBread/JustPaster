@@ -92,17 +92,3 @@ app.get('/api/paste/:id/views', async (req, res) => {
 app.listen(process.env.PORT, () => {
   console.log(`Server running at http://localhost:${process.env.PORT}`);
 });
-
-async function countPastes() {
-  try {
-    const count = await Paste.countDocuments();
-    console.log(`Total number of pastes: ${count}`);
-  } catch (err) {
-    console.error('Error counting pastes:', err);
-  } finally {
-    mongoose.disconnect(); // Close the connection
-  }
-}
-
-// Call the function to count pastes
-countPastes();
