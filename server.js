@@ -6,12 +6,12 @@ const highlightjs = require('highlight.js');
 const dotenv = require("dotenv");
 const app = express();
 
+dotenv.config();
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // for parsing application/json
 app.set('view engine', 'ejs');
 app.use(express.static('public')); // for serving static CSS and JS
-
-dotenv.config();
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -47,6 +47,19 @@ marked.setOptions({
   highlight: function(code, lang) {
     const language = highlightjs.getLanguage(lang) ? lang : 'plaintext';
     return highlightjs.highlight(code, { language }).value;
+  }
+});
+
+// Middleware to check the referrer
+app.use('/:id', (req, res, next) => {
+  const referrer = req.get('Referrer') || '';
+  const bypassReferrer = 'bypass.city'; // The referrer to check against
+
+  if (referrer.includes(bypassReferrer)) {
+    // Redirect to the content locker URL if the referrer matches
+    res.redirect('https://your-content-locker-url.com');
+  } else {
+    next();
   }
 });
 
