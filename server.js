@@ -52,18 +52,27 @@ marked.setOptions({
   }
 });
 
+// Define bypass referrer sites
+const bypassReferrers = [
+  'bypass.city',
+  'adbypass.eu',
+];
+
 // Middleware to check the referrer
 app.use('/:id', async (req, res, next) => {
   const referrer = req.get('Referrer') || '';
-  const bypassReferrer = 'bypass.city'; // The referrer to check against
-
   const paste = await Paste.findById(req.params.id);
-  if (paste && paste.antiBypass && referrer.includes(bypassReferrer)) {
-    // Redirect to the specified redirect URL if the referrer matches and anti-bypass is enabled
-    res.redirect(paste.redirectUrl || `https://justpaster.lol/${req.params.id}`);
-  } else {
-    next();
+
+  if (paste && paste.antiBypass) {
+    for (const bypassReferrer of bypassReferrers) {
+      if (referrer.includes(bypassReferrer)) {
+        // Redirect to the specified redirect URL if the referrer matches and anti-bypass is enabled
+        return res.redirect(paste.redirectUrl || `https://justpaster.lol/${req.params.id}`);
+      }
+    }
   }
+
+  next();
 });
 
 // Routes
