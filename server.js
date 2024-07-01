@@ -37,7 +37,9 @@ const pasteSchema = new mongoose.Schema({
   _id: { type: String, default: () => generateId(6) }, // Use generated ID as _id
   content: String,
   createdAt: { type: Date, default: Date.now },
-  views: { type: Number, default: 0 }
+  views: { type: Number, default: 0 },
+  antiBypass: { type: Boolean, default: false },
+  redirectUrl: { type: String, default: '' }
 }, { _id: false }); // Prevent Mongoose from adding a default _id
 
 const Paste = mongoose.model('Paste', pasteSchema);
@@ -51,13 +53,14 @@ marked.setOptions({
 });
 
 // Middleware to check the referrer
-app.use('/:id', (req, res, next) => {
+app.use('/:id', async (req, res, next) => {
   const referrer = req.get('Referrer') || '';
   const bypassReferrer = 'bypass.city'; // The referrer to check against
 
-  if (referrer.includes(bypassReferrer)) {
-    // Redirect to the content locker URL if the referrer matches
-    res.redirect('https://your-content-locker-url.com');
+  const paste = await Paste.findById(req.params.id);
+  if (paste && paste.antiBypass && referrer.includes(bypassReferrer)) {
+    // Redirect to the specified redirect URL if the referrer matches and anti-bypass is enabled
+    res.redirect(paste.redirectUrl || `https://justpaster.lol/${req.params.id}`);
   } else {
     next();
   }
@@ -87,7 +90,11 @@ app.get('/:id', async (req, res) => {
 
 // REST API for creating pastes
 app.post('/api/paste', async (req, res) => {
-  const newPaste = new Paste({ content: req.body.content });
+  const newPaste = new Paste({ 
+    content: req.body.content,
+    antiBypass: req.body.antiBypass,
+    redirectUrl: req.body.redirectUrl
+  });
   await newPaste.save();
   res.json({ id: newPaste.id });
 });
