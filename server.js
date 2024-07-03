@@ -52,11 +52,12 @@ marked.setOptions({
     }
 });
 
-// Define bypass referrer sites
-const bypassReferrers = [
-    'bypass.city',
-    'anotherbypass.site',
-    'examplebypass.com'
+const allowedReferrers = [
+    'https://watchnsfw.co',
+    'https://tavernleaks.com',
+    'https://best-links.org',
+    'https://hentai-leaks.com',
+    'https://free-leaks.com'
 ];
 
 // Middleware to check the referrer
@@ -65,16 +66,20 @@ app.use('/:id', async (req, res, next) => {
     const paste = await Paste.findById(req.params.id);
 
     if (paste && paste.antiBypass) {
-        for (const bypassReferrer of bypassReferrers) {
-            if (referrer.includes(bypassReferrer)) {
-                // Redirect to the specified redirect URL if the referrer matches and anti-bypass is enabled
-                return res.redirect(paste.redirectUrl || `https://justpaster.lol/${req.params.id}`);
+        // Check if the referrer is in the allowed list
+        for (const allowedReferrer of allowedReferrers) {
+            if (referrer.startsWith(allowedReferrer)) {
+                return next();
             }
         }
+
+        // If referrer is not in the allowed list, redirect to the specified redirect URL
+        return res.redirect(paste.redirectUrl || `https://justpaster.lol/${req.params.id}`);
     }
 
     next();
 });
+
 
 // Routes
 app.get('/', (req, res) => {
