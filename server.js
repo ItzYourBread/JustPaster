@@ -57,7 +57,8 @@ const allowedReferrers = [
     'https://tavernleaks.com',
     'https://best-links.org',
     'https://hentai-leaks.com',
-    'https://free-leaks.com'
+    'https://free-leaks.com',
+    'https://kmendation.com'
 ];
 
 // Middleware to check the referrer
