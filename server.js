@@ -194,7 +194,7 @@ app.post('/api/shorten', async (req, res) => {
     await shortenedUrl.save();
 
     // Respond with the shortened URL
-    const shortUrl = `LS${shortenedUrl._id}`;
+    const shortUrl = `${shortenedUrl._id}`;
     res.json({ shortUrl });
 });
 
