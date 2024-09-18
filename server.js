@@ -193,7 +193,7 @@ app.post('/api/shorten', async (req, res) => {
     await shortenedUrl.save();
 
     // Respond with the shortened URL
-    const shortUrl = `${req.headers.host}/linkvertise/${shortenedUrl._id}`;
+    const shortUrl = `LS${shortenedUrl._id}`;
     res.json({ shortUrl });
 });
 
