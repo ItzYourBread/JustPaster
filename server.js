@@ -135,7 +135,7 @@ app.get('/:id', async (req, res) => {
 app.post('/api/paste', async (req, res) => {
     const newPaste = new Paste({ content: req.body.content });
     await newPaste.save();
-    res.json({ id: "PT" + newPaste.id });
+    res.json({ id: newPaste.id });
 });
 
 // REST API for retrieving paste views
