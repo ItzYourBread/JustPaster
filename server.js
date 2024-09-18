@@ -101,7 +101,7 @@ app.get('/:id', async (req, res) => {
 
     if (id.startsWith('LS')) {
         // Handle Link Shortener
-        const shortenedUrl = await LinkShortener.findById(id); // Remove 'LS' prefix to get actual ID
+        const shortenedUrl = await LinkShortener.findById(id); 
 
         if (shortenedUrl) {
             // Increment click count
@@ -115,7 +115,7 @@ app.get('/:id', async (req, res) => {
         }
     } else if (id.startsWith('PT')) {
         // Handle Paste
-        const paste = await Paste.findById(id); // Remove 'PT' prefix to get actual ID
+        const paste = await Paste.findById(id);
 
         if (paste) {
             paste.views++;
