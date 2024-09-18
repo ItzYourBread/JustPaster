@@ -94,14 +94,39 @@ app.post('/', async (req, res) => {
     res.redirect(`/${newPaste.id}`);
 });
 
+// Route to handle redirection for both short links and pastes
 app.get('/:id', async (req, res) => {
-    const paste = await Paste.findById(req.params.id);
-    if (paste) {
-        paste.views++;
-        await paste.save();
-        res.render('paste', { paste: paste, content: marked(paste.content) });
+    const { id } = req.params;
+
+    if (id.startsWith('LS')) {
+        // Handle Link Shortener
+        const shortenedUrl = await LinkShortener.findById(id.substring(2)); // Remove 'LS' prefix to get actual ID
+
+        if (shortenedUrl) {
+            // Increment click count
+            shortenedUrl.clickCount++;
+            await shortenedUrl.save();
+
+            // Redirect to the original URL
+            res.redirect(shortenedUrl.originalUrl);
+        } else {
+            res.status(404).send('Shortened URL not found');
+        }
+    } else if (id.startsWith('PT')) {
+        // Handle Paste
+        const paste = await Paste.findById(id.substring(2)); // Remove 'PT' prefix to get actual ID
+
+        if (paste) {
+            paste.views++;
+            await paste.save();
+
+            res.render('paste', { paste: paste, content: marked(paste.content) });
+        } else {
+            res.status(404).send('Paste not found');
+        }
     } else {
-        res.status(404).send('Paste not found');
+        // Handle invalid ID format
+        res.status(400).send('Invalid ID format');
     }
 });
 
@@ -151,7 +176,7 @@ const linkShortenerSchema = new mongoose.Schema({
     originalUrl: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     clickCount: { type: Number, default: 0 }
-}, { _id: false }); 
+}, { _id: false });
 
 const LinkShortener = mongoose.model('LinkShortener', linkShortenerSchema);
 
@@ -170,22 +195,6 @@ app.post('/api/shorten', async (req, res) => {
     // Respond with the shortened URL
     const shortUrl = `${req.headers.host}/linkvertise/${shortenedUrl._id}`;
     res.json({ shortUrl });
-});
-
-// Route to handle redirection based on the short URL
-app.get('linkvertise/:id', async (req, res) => {
-    const shortenedUrl = await LinkShortener.findById(req.params.id);
-
-    if (shortenedUrl) {
-        // Increment click count
-        shortenedUrl.clickCount++;
-        await shortenedUrl.save();
-
-        // Redirect to the original URL
-        res.redirect(shortenedUrl.originalUrl);
-    } else {
-        res.status(404).send('Shortened URL not found');
-    }
 });
 
 
