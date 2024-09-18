@@ -22,19 +22,20 @@ mongoose
         throw err;
     });
 
-// Generate a random ID of 6 characters
+// Generate a random ID of 6 characters, prefixed with "PT"
 function generateId(length) {
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
+    let result = 'PT'; // Prefix with "PT"
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
 }
 
+
 // Paste schema and model
 const pasteSchema = new mongoose.Schema({
-    _id: { type: String, default: () => generateId(6) }, // Use generated ID as _id
+    _id: { type: String, default: () => generateId(8) }, // Use generated ID as _id
     content: String,
     createdAt: { type: Date, default: Date.now },
     views: { type: Number, default: 0 },
@@ -91,7 +92,7 @@ app.get('/', (req, res) => {
 app.post('/', async (req, res) => {
     const newPaste = new Paste({ content: req.body.content });
     await newPaste.save();
-    res.redirect(`/${newPaste.id}`);
+    res.redirect(`/${"PT" + newPaste.id}`);
 });
 
 // Route to handle redirection for both short links and pastes
@@ -160,10 +161,10 @@ app.post('/api/paste/:id/anti-bypass', async (req, res) => {
     }
 });
 
-// Generate a random ID of 6 characters
-function generateId(length) {
+// Generate a random ID of 6 characters, prefixed with "PT"
+function generateLinkId(length) {
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
+    let result = 'LS'; // Prefix with "PT"
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
@@ -172,7 +173,7 @@ function generateId(length) {
 
 // Link Shortener Schema and Model
 const linkShortenerSchema = new mongoose.Schema({
-    _id: { type: String, default: () => generateId(6) },
+    _id: { type: String, default: () => generateLinkId(8) },
     originalUrl: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     clickCount: { type: Number, default: 0 }
