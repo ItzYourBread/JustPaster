@@ -58,7 +58,8 @@ const allowedReferrers = [
     'https://best-links.org',
     'https://hentai-leaks.com',
     'https://free-leaks.com',
-    'https://kmendation.com'
+    'https://kmendation.com',
+    'https://linkvertise.com'
 ];
 
 // Middleware to check the referrer
@@ -133,6 +134,60 @@ app.post('/api/paste/:id/anti-bypass', async (req, res) => {
         res.status(404).send('Paste not found');
     }
 });
+
+// Generate a random ID of 6 characters
+function generateId(length) {
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
+// Link Shortener Schema and Model
+const linkShortenerSchema = new mongoose.Schema({
+    _id: { type: String, default: () => generateId(6) },
+    originalUrl: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    clickCount: { type: Number, default: 0 }
+}, { _id: false }); 
+
+const LinkShortener = mongoose.model('LinkShortener', linkShortenerSchema);
+
+// Route to shorten any URL
+app.post('/api/shorten', async (req, res) => {
+    const { originalUrl } = req.body;
+
+    if (!originalUrl) {
+        return res.status(400).json({ error: 'Original URL is required' });
+    }
+
+    // Save the original URL with a generated short ID
+    const shortenedUrl = new LinkShortener({ originalUrl });
+    await shortenedUrl.save();
+
+    // Respond with the shortened URL
+    const shortUrl = `${req.headers.host}/linkvertise/${shortenedUrl._id}`;
+    res.json({ shortUrl });
+});
+
+// Route to handle redirection based on the short URL
+app.get('linkvertise/:id', async (req, res) => {
+    const shortenedUrl = await LinkShortener.findById(req.params.id);
+
+    if (shortenedUrl) {
+        // Increment click count
+        shortenedUrl.clickCount++;
+        await shortenedUrl.save();
+
+        // Redirect to the original URL
+        res.redirect(shortenedUrl.originalUrl);
+    } else {
+        res.status(404).send('Shortened URL not found');
+    }
+});
+
 
 app.listen(process.env.PORT, () => {
     console.log(`Server running at http://localhost:${process.env.PORT}`);
