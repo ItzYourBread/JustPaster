@@ -92,7 +92,7 @@ app.get('/', (req, res) => {
 app.post('/', async (req, res) => {
     const newPaste = new Paste({ content: req.body.content });
     await newPaste.save();
-    res.redirect(`/${"PT" + newPaste.id}`);
+    res.redirect(`/${newPaste.id}`);
 });
 
 // Route to handle redirection for both short links and pastes
