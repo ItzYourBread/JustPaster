@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { marked } = require('marked');
 const highlightjs = require('highlight.js');
 const dotenv = require("dotenv");
+const path = require("path"); // Import path module for handling file paths
 const app = express();
 
 dotenv.config();
@@ -12,6 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // for parsing application/json
 app.set('view engine', 'ejs');
 app.use(express.static('public')); // for serving static CSS and JS
+app.use('/cdn', express.static(path.join(__dirname, 'cdn')));
 
 mongoose
     .connect(process.env.MONGO_URL)
