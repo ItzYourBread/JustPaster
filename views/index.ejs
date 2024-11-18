@@ -1,23 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>JustPaster - Create Paste</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
-  <link rel="icon" type="image/png" href="/justpaster.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name='admaven-placement' content=BrHr7rTY5>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Paste</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Create a New Paste</h1>
-    <form action="/" method="POST">
-      <textarea name="content" rows="25" cols="30" placeholder="Write your markdown here..."></textarea>
-      <br>
-      <button type="submit">Create Paste</button>
-    </form>
-  </div>
+    <div class="container">
+        <h1>Create a New Paste</h1>
+        <form id="createPasteForm">
+            <textarea name="content" rows="10" placeholder="Write your markdown here..." required></textarea>
+            <br>
+            <button type="submit">Create Paste</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#createPasteForm').on('submit', function(event) {
+                event.preventDefault();
+
+                // Get the content from the textarea
+                const content = $("textarea[name='content']").val();
+
+                // Make an AJAX request to create a new paste
+                $.ajax({
+                    url: '/api/paste',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ content: content }),
+                    success: function(response) {
+                        // Redirect the user to the created paste page
+                        window.location.href = `/${response.id}`;
+                    },
+                    error: function() {
+                        alert("An error occurred while creating the paste.");
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
