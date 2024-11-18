@@ -4,7 +4,6 @@ const { LinkShortener } = require('../models/linkShortener');
 const { Paste } = require('../models/paste');
 const { marked } = require('marked');
 
-
 // Routes
 router.get('/', (req, res) => {
     res.render('index');
