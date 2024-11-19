@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
 });
 
 // Step 1: Validate initial access
-router.get('/getkey/:serverName/step1', async (req, res) => {
+router.get('/getKey/:serverName/step1', async (req, res) => {
     const { serverName } = req.params;
     const config = rewardsConfig[serverName];
 
@@ -32,11 +32,11 @@ router.get('/getkey/:serverName/step1', async (req, res) => {
     }
 
     // Proceed to step 2
-    res.redirect(`/getkey/${serverName}/step2`);
+    res.redirect(`/getKey/${serverName}/step2`);
 });
 
 // Step 2: Validate completion and generate key
-router.get('/getkey/:serverName/step2', async (req, res) => {
+router.get('/getKey/:serverName/step2', async (req, res) => {
     const { serverName } = req.params;
     const config = rewardsConfig[serverName];
 
@@ -56,11 +56,11 @@ router.get('/getkey/:serverName/step2', async (req, res) => {
     await newKey.save();
 
     // Redirect to granted route with the generated key
-    res.redirect(`/getkey/${serverName}/granted?key=${generatedKey}`);
+    res.redirect(`/getKey/${serverName}/granted?key=${generatedKey}`);
 });
 
 // Step 3: Display the generated key
-router.get('/getkey/:serverName/granted', async (req, res) => {
+router.get('/getKey/:serverName/granted', async (req, res) => {
     const { serverName } = req.params;
     const { key } = req.query;
 
