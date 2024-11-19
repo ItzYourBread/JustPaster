@@ -5,6 +5,8 @@ const { Paste } = require('../models/paste');
 const PremiumKey = require('../models/premiumKey');
 const rewardsConfig = require('../rewardsConfig.json');
 const { marked } = require('marked');
+const crypto = require('crypto');
+
 
 // Helper function to generate a random key
 function generatePremiumKey() {
