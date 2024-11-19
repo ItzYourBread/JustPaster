@@ -10,7 +10,7 @@ const crypto = require('crypto');
 
 // Helper function to generate a random key
 function generatePremiumKey() {
-    return crypto.randomBytes(16).toString('hex'); // Generates a 32-character random key
+    return crypto.randomBytes(8).toString('hex'); // Generates a 32-character random key
 }
 
 // Routes
