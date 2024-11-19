@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Key Granted</title>
+    <link rel="stylesheet" href="/granted.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎉 Congratulations! 🎉</h1>
+            <p>Your premium key for the server is:</p>
+            <div class="key-box" id="key-box" onclick="copyToClipboard()">
+                <code>dwdada</code>
+            </div>
+            <p id="copy-message" style="display: none; color: #4caf50; margin-top: 10px;">Copied to clipboard!</p>
+            <p>Save this key securely. You won’t see it again!</p>
+            <a href="/" class="btn">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const keyBox = document.getElementById('key-box');
+            const keyText = keyBox.innerText;
+            navigator.clipboard.writeText(keyText).then(() => {
+                const copyMessage = document.getElementById('copy-message');
+                copyMessage.style.display = 'block';
+                setTimeout(() => {
+                    copyMessage.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

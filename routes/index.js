@@ -2,12 +2,81 @@ const express = require('express');
 const router = express.Router();
 const { LinkShortener } = require('../models/linkShortener');
 const { Paste } = require('../models/paste');
+const PremiumKey = require('../models/premiumKey');
+const rewardsConfig = require('../rewardsConfig.json');
 const { marked } = require('marked');
+
+// Helper function to generate a random key
+function generatePremiumKey() {
+    return crypto.randomBytes(16).toString('hex'); // Generates a 32-character random key
+}
 
 // Routes
 router.get('/', (req, res) => {
     res.render('index');
 });
+
+// Step 1: Validate initial access
+router.get('/getkey/:serverName/step1', async (req, res) => {
+    const { serverName } = req.params;
+    const config = rewardsConfig[serverName];
+
+    if (!config) {
+        return res.status(404).send('Invalid server name');
+    }
+
+    const referrer = req.get('Referrer') || '';
+    if (!referrer.startsWith(config.domain)) {
+        // Referrer validation failed, redirect to 1of2 URL
+        return res.redirect(config['1of2']);
+    }
+
+    // Proceed to step 2
+    res.redirect(`/getkey/${serverName}/step2`);
+});
+
+// Step 2: Validate completion and generate key
+router.get('/getkey/:serverName/step2', async (req, res) => {
+    const { serverName } = req.params;
+    const config = rewardsConfig[serverName];
+
+    if (!config) {
+        return res.status(404).send('Invalid server name');
+    }
+
+    const referrer = req.get('Referrer') || '';
+    if (!referrer.startsWith(config.domain)) {
+        // Referrer validation failed, redirect to 2of2 URL
+        return res.redirect(config['2of2']);
+    }
+
+    // Generate and store the premium key
+    const generatedKey = generatePremiumKey();
+    const newKey = new PremiumKey({ serverName, generatedKey });
+    await newKey.save();
+
+    // Redirect to granted route with the generated key
+    res.redirect(`/getkey/${serverName}/granted?key=${generatedKey}`);
+});
+
+// Step 3: Display the generated key
+router.get('/getkey/:serverName/granted', async (req, res) => {
+    const { serverName } = req.params;
+    const { key } = req.query;
+
+    const config = rewardsConfig[serverName];
+    if (!config) {
+        return res.status(404).send('Invalid server name');
+    }
+
+    const existingKey = await PremiumKey.findOne({ serverName, generatedKey: key });
+    if (!existingKey) {
+        return res.status(404).send('Invalid or expired key');
+    }
+
+    res.render('granted', { key });
+});
+
 
 // Route to handle redirection for both short links and pastes
 router.get('/:id', async (req, res) => {
