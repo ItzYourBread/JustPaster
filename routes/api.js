@@ -2,6 +2,42 @@ const express = require('express');
 const router = express.Router();
 const { Paste } = require('../models/paste');
 const { LinkShortener } = require('../models/linkShortener');
+const PremiumKey = require('../models/premiumKey');
+
+// API to check the validity of a premium key
+router.get('/getKey/:serverName/check', async (req, res) => {
+    const { serverName } = req.params;
+    const { key } = req.query;
+
+    if (!key) {
+        return res.status(400).json({ error: 'Key is required' });
+    }
+
+    const existingKey = await PremiumKey.findOne({ serverName, generatedKey: key });
+    if (existingKey) {
+        res.json({ valid: true, message: 'Key is valid' });
+    } else {
+        res.status(404).json({ valid: false, message: 'Key is invalid or not found' });
+    }
+});
+
+// API to remove a premium key
+router.delete('/getKey/:serverName/remove', async (req, res) => {
+    const { serverName } = req.params;
+    const { key } = req.body;
+
+    if (!key) {
+        return res.status(400).json({ error: 'Key is required' });
+    }
+
+    const deletedKey = await PremiumKey.findOneAndDelete({ serverName, generatedKey: key });
+
+    if (deletedKey) {
+        res.json({ success: true, message: 'Key successfully removed' });
+    } else {
+        res.status(404).json({ success: false, message: 'Key not found' });
+    }
+});
 
 // REST API for creating pastes
 router.post('/paste', async (req, res) => {

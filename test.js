@@ -1,24 +1,51 @@
-const axios = require('axios'); // Axios is used for making HTTP requests
-const dotenv = require('dotenv');
+const axios = require('axios');
 
-dotenv.config();
+// Base URL for your server
+const BASE_URL = 'http://localhost:3000/api';
 
-const BASE_URL = `http://localhost:${process.env.PORT || 3000}/api/shorten`;
+// Server name for testing
+const SERVER_NAME = 'WatchNSFW';
 
-// Function to create a shortened URL
-async function createShortenedUrl(originalUrl) {
+// Example premium key for testing
+const TEST_KEY = 'example-premium-key';
+
+// Function to test the check API
+async function testCheckKey() {
     try {
-        const response = await axios.post(BASE_URL, { originalUrl });
-        console.log(`Original URL: ${originalUrl}`);
-        console.log(`Shortened URL ID: ${response.data.shortUrl}`);
+        const response = await axios.get(`${BASE_URL}/getKey/${SERVER_NAME}/check`, {
+            params: { key: TEST_KEY }
+        });
+        console.log('Check API Response:', response.data);
     } catch (error) {
-        console.error('Error creating shortened URL:', error.response?.data || error.message);
+        if (error.response) {
+            console.error('Check API Error:', error.response.data);
+        } else {
+            console.error('Check API Network Error:', error.message);
+        }
     }
 }
 
-// Test cases
-(async () => {
-    await createShortenedUrl('https://example.com');
-    await createShortenedUrl('https://google.com');
-    await createShortenedUrl('https://github.com');
+// Function to test the remove API
+async function testRemoveKey() {
+    try {
+        const response = await axios.delete(`${BASE_URL}/getKey/${SERVER_NAME}/remove`, {
+            data: { key: TEST_KEY }
+        });
+        console.log('Remove API Response:', response.data);
+    } catch (error) {
+        if (error.response) {
+            console.error('Remove API Error:', error.response.data);
+        } else {
+            console.error('Remove API Network Error:', error.message);
+        }
+    }
+}
+
+// Run the tests
+(async function runTests() {
+    console.log('Testing Check API...');
+    await testCheckKey();
+
+    console.log('\nTesting Remove API...');
+    await testRemoveKey();
 })();
