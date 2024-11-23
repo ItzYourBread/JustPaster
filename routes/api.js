@@ -17,7 +17,7 @@ router.get('/getKey/:serverName/check', async (req, res) => {
     if (existingKey) {
         res.json({ valid: true, message: 'Key is valid' });
     } else {
-        res.status(404).json({ valid: false, message: 'Key is invalid or not found' });
+        res.status(400).json({ valid: false, message: 'Key is invalid or not found' });
     }
 });
 

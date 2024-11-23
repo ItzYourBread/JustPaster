@@ -1,51 +1,27 @@
-const axios = require('axios');
+require('dotenv').config(); // For loading environment variables
+const mongoose = require('mongoose');
+const { Paste } = require('./models/paste');
 
-// Base URL for your server
-const BASE_URL = 'http://localhost:3000/api';
+// Connect to the database
+mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('Database connected successfully'))
+    .catch(err => console.error('Database connection error:', err));
 
-// Server name for testing
-const SERVER_NAME = 'WatchNSFW';
-
-// Example premium key for testing
-const TEST_KEY = 'example-premium-key';
-
-// Function to test the check API
-async function testCheckKey() {
+// Fetch and display the latest created paste ID
+async function getLatestPasteId() {
     try {
-        const response = await axios.get(`${BASE_URL}/getKey/${SERVER_NAME}/check`, {
-            params: { key: TEST_KEY }
-        });
-        console.log('Check API Response:', response.data);
-    } catch (error) {
-        if (error.response) {
-            console.error('Check API Error:', error.response.data);
+        const latestPaste = await Paste.findOne().sort({ createdAt: -1 }).exec();
+        if (latestPaste) {
+            console.log('Latest Paste ID:', latestPaste._id);
         } else {
-            console.error('Check API Network Error:', error.message);
+            console.log('No pastes found.');
         }
+    } catch (err) {
+        console.error('Error fetching latest paste ID:', err);
+    } finally {
+        mongoose.connection.close(); // Close the connection after the query
     }
 }
 
-// Function to test the remove API
-async function testRemoveKey() {
-    try {
-        const response = await axios.delete(`${BASE_URL}/getKey/${SERVER_NAME}/remove`, {
-            data: { key: TEST_KEY }
-        });
-        console.log('Remove API Response:', response.data);
-    } catch (error) {
-        if (error.response) {
-            console.error('Remove API Error:', error.response.data);
-        } else {
-            console.error('Remove API Network Error:', error.message);
-        }
-    }
-}
-
-// Run the tests
-(async function runTests() {
-    console.log('Testing Check API...');
-    await testCheckKey();
-
-    console.log('\nTesting Remove API...');
-    await testRemoveKey();
-})();
+// Execute the function
+getLatestPasteId();
