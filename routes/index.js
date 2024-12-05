@@ -18,7 +18,6 @@ router.get('/', (req, res) => {
     res.render('index');
 });
 
-// Step 1: Validate initial access
 router.get('/getKey/:serverName/step1', async (req, res) => {
     const { serverName } = req.params;
     const config = rewardsConfig[serverName];
@@ -33,9 +32,10 @@ router.get('/getKey/:serverName/step1', async (req, res) => {
         return res.redirect(config['1of2']);
     }
 
-    // Proceed to step 2
-    res.redirect(`/getKey/${serverName}/step2`);
+    // Render the dynamic card for the next step
+    res.render('getKey', { redirectURL: `/getKey/${serverName}/step2` });
 });
+
 
 // Step 2: Validate completion and generate key
 router.get('/getKey/:serverName/step2', async (req, res) => {

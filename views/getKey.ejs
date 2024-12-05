@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Key</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .card {
+            background: #fff;
+            max-width: 400px;
+            width: 90%;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card h1 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .card button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0071bc;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .card button:hover {
+            background-color: #005a94;
+        }
+
+        @media (min-width: 768px) {
+            .card {
+                max-width: 500px;
+            }
+
+            .card h1 {
+                font-size: 2rem;
+            }
+
+            .card p {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Get Your Premium Key</h1>
+        <p>Click the button below to proceed to the next step and access your premium key.</p>
+        <form action="<%= redirectURL %>" method="get">
+            <button type="submit">Proceed</button>
+        </form>
+    </div>
+</body>
+</html>
