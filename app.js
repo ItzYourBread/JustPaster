@@ -25,7 +25,8 @@ const allowedReferrers = [
     'https://hentai-leaks.com',
     'https://free-leaks.com',
     'https://kmendation.com',
-    'https://linkvertise.com'
+    'https://linkvertise.com',
+    'https://lockr.so'
 ];
 
 // Middleware to check the referrer
