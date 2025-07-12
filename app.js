@@ -26,6 +26,8 @@ const allowedReferrers = [
     'https://free-leaks.com',
     'https://kmendation.com',
     'https://linkvertise.com',
+    'https://tonordersitye.com',
+    'https://bleleadersto.com',
     'https://lockr.so'
 ];
 
