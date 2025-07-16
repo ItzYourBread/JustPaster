@@ -28,6 +28,7 @@ const allowedReferrers = [
     'https://linkvertise.com',
     'https://tonordersitye.com',
     'https://bleleadersto.com',
+    'https://daughablelea.com',
     'https://lockr.so'
 ];
 
