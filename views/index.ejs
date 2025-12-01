@@ -2,48 +2,44 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Paste</title>
-    <link rel="stylesheet" href="/style.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Paste - JustPaster</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Create a New Paste</h1>
-        <form id="createPasteForm">
-            <textarea name="content" rows="24" placeholder="Write your markdown here..." required></textarea>
-            <br>
-            <button type="submit">Create Paste</button>
-        </form>
-    </div>
+  <div class="container">
+    <h1>Create a New Paste</h1>
+    <form id="createPasteForm">
+      <textarea name="content" rows="24" placeholder="Write your markdown here..." required></textarea>
+      <button type="submit">Create Paste</button>
+    </form>
+  </div>
 
-    <script>
-        $(document).ready(function() {
-            $('#createPasteForm').on('submit', function(event) {
-                event.preventDefault();
+  <script>
+    $(document).ready(function () {
+      $('#createPasteForm').on('submit', function (event) {
+        event.preventDefault();
 
-                // Get the content from the textarea
-                const content = $("textarea[name='content']").val();
+        const content = $("textarea[name='content']").val();
 
-                // Make an AJAX request to create a new paste
-                $.ajax({
-                    url: '/api/paste',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ content: content }),
-                    success: function(response) {
-                        // Redirect the user to the created paste page
-                        window.location.href = `/${response.id}`;
-                    },
-                    error: function() {
-                        alert("An error occurred while creating the paste.");
-                    }
-                });
-            });
+        $.ajax({
+          url: '/api/paste',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ content }),
+          success: function (response) {
+            window.location.href = `/${response.id}`;
+          },
+          error: function () {
+            alert("An error occurred while creating the paste.");
+          }
         });
-    </script>
+      });
+    });
+  </script>
 </body>
 
 </html>

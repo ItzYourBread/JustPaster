@@ -1,33 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+  <meta charset="UTF-8" />
   <title>JustPaster - View Paste</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
-  <link rel="icon" type="image/png" href="/justpaster.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name='admaven-placement' content=BrHr7rTY5>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="/justpaster.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="admaven-placement" content="BrHr7rTY5" />
+
+  <!-- Highlight.js GitHub Dark theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" />
+
+  <!-- Highlight.js core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+  <!-- QR Code generator lib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
   <div class="container">
-    <h1>JustPaster</h1>
-    <div class="markdown-content"><%- content %></div>
-    <p>Views: <%= paste.views %></p>
+    <a href="/" style="text-decoration: none; color: inherit;">
+      <h1>JustPaster</h1>
+    </a>
+    <div class="markdown-content" contenteditable="true"><%- content %></div>
+    <p>Views: <%= paste.views %>
+    </p>
+
+    <button class="copy-button" id="copyBtn">📋 Copy URL</button>
+    <button class="qr-button" id="qrBtn">📱 Share as QR</button>
+
+    <div id="qrPopup">
+      <div class="qr-container">
+        <span class="close" id="qrCloseBtn">×</span>
+        <div id="qrcode"></div>
+      </div>
+    </div>
+
     <!-- Ad space -->
     <!-- <div class="ad-space">
       <p>Ad space - Banner Ad goes here</p>
     </div> -->
   </div>
 
-  <!-- <script>
-    if (Math.random() < 0.4) {  // 40% chance
-      var s = document.createElement('script');
-      s.setAttribute('data-cfasync', 'false');
-      s.src = "//d1k8mqc61fowi.cloudfront.net/?cqmkd=1051933";
-      document.body.appendChild(s);
+  <script>
+    // Copy URL button
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('Paste URL copied to clipboard!');
+      });
+    });
+
+    const qrBtn = document.getElementById('qrBtn');
+    const qrPopup = document.getElementById('qrPopup');
+    const qrCloseBtn = document.getElementById('qrCloseBtn');
+    const qrcodeDiv = document.getElementById('qrcode');
+    let qrCodeInstance;
+
+    function openQR() {
+      qrPopup.classList.add('active');
+      qrcodeDiv.innerHTML = ''; // Clear previous QR code
+      qrCodeInstance = new QRCode(qrcodeDiv, {
+        text: window.location.href,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
     }
-  </script> -->
+
+    function closeQR() {
+      qrPopup.classList.remove('active');
+      qrcodeDiv.innerHTML = '';
+      qrCodeInstance = null;
+    }
+
+    qrBtn.addEventListener('click', openQR);
+    qrCloseBtn.addEventListener('click', closeQR);
+
+    // Close modal if clicking outside QR container
+    qrPopup.addEventListener('click', e => {
+      if (e.target === qrPopup) {
+        closeQR();
+      }
+    });
+
+    // Close modal on ESC
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && qrPopup.classList.contains('active')) {
+        closeQR();
+      }
+    });
+
+    // Highlight.js init
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightBlock(block);
+      });
+    });
+  </script>
 </body>
 
 </html>

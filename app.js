@@ -39,11 +39,11 @@ app.use('/:id', async (req, res, next) => {
 
     if (paste && paste.antiBypass) {
         // Check if the referrer is in the allowed list
-        for (const allowedReferrer of allowedReferrers) {
-            if (referrer.startsWith(allowedReferrer)) {
-                return next();
-            }
-        }
+        // for (const allowedReferrer of allowedReferrers) {
+        //     if (referrer.startsWith(allowedReferrer)) {
+        //         return next();
+        //     }
+        // }
 
         // If referrer is not in the allowed list, redirect to the specified redirect URL
         return res.redirect(paste.redirectUrl || `https://justpaster.xyz/${req.params.id}`);

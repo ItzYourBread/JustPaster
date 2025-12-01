@@ -1,109 +1,243 @@
+:root {
+  --bg: #1e1e1e;
+  --bg-alt: #252526;
+  --fg: #ffecf1;
+  --primary: #ffb3bf;
+  --secondary: #b37d8b;
+  --textarea-bg: #1e1e1e;
+  --textarea-fg: #ffd9e3;
+  --scroll-thumb: #b37d8b;
+  --link-hover: #fff;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background-color: #121212;
-  color: #e0e0e0;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  background-color: var(--bg);
+  color: var(--fg);
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
   width: 90%;
-  max-width: 800px;
-  margin: 0 auto;
-  background-color: #1e1e1e;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  margin-top: 50px;
+  max-width: 900px;
+  margin: 40px auto;
+  background-color: var(--bg-alt);
+  padding: 30px 25px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  position: relative;
+  box-sizing: border-box;
 }
 
 h1 {
   text-align: center;
-  color: #bb86fc;
+  color: var(--primary);
+  margin-bottom: 24px;
+  font-weight: 500;
+  user-select: none;
+}
+
+a h1 {
+  cursor: pointer;
+}
+
+p {
+  font-size: 14px;
+  margin-top: 15px;
+  color: var(--primary);
+  user-select: none;
+}
+
+/* === Form & Textarea for index.ejs === */
+
+form {
+  width: 100%;
 }
 
 textarea {
-  width: 97%;
-  background-color: #2c2c2c;
-  color: #e0e0e0;
+  width: 100%;
+  background-color: var(--textarea-bg);
+  color: var(--textarea-fg);
   border: none;
-  padding: 10px;
-  margin-bottom: 10px;
-  font-family: monospace;
+  border-left: 4px solid var(--secondary);
+  padding: 14px 16px;
+  font-size: 15px;
+  font-family: 'Fira Code', monospace;
+  line-height: 1.5;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 320px;
+  white-space: pre-wrap;
+  overflow: auto;
+  box-sizing: border-box;
 }
 
-button {
+textarea::-webkit-scrollbar {
+  width: 10px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 5px;
+}
+
+button[type="submit"] {
   display: block;
   width: 100%;
-  padding: 10px;
-  background-color: #bb86fc;
-  color: white;
+  padding: 14px;
+  background-color: var(--secondary);
+  color: #fff;
   border: none;
+  border-radius: 8px;
+  font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+  transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: #9a67ea;
+button[type="submit"]:hover {
+  background-color: var(--primary);
 }
 
-.ad-space {
-  text-align: center;
+/* === Buttons for paste.ejs === */
+
+.copy-button,
+.qr-button {
+  background-color: var(--primary);
+  border: none;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  user-select: none;
+  margin-right: 10px;
+  display: inline-block;
   margin-top: 20px;
-  padding: 10px;
-  background-color: #2c2c2c;
-  border: 1px solid #bb86fc;
+  min-width: 120px;
 }
+
+.copy-button:hover,
+.qr-button:hover {
+  background-color: var(--secondary);
+}
+
+/* === Paste display === */
 
 .markdown-content {
-  background-color: #2c2c2c;
-  padding: 10px;
-  border-radius: 5px;
+  background-color: var(--textarea-bg);
+  padding: 20px 24px;
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  line-height: 1.6;
+  color: var(--fg);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 70vh;
+  user-select: text;
 }
 
-pre {
-  background-color: #3c3c3c;
-  padding: 10px;
-  border-radius: 5px;
-  overflow: auto;
+/* Highlight.js code blocks */
+pre code {
+  display: block;
+  white-space: pre;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  overflow-x: auto;
+  line-height: 1.5;
+  background: none; /* let highlight.js theme style */
+  color: inherit;   /* let highlight.js theme style */
 }
 
 a {
-  color: #bb86fc;
-  text-decoration: none;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--link-hover);
 }
 
-/* Responsive adjustments */
+/* === QR modal styles === */
+
+#qrPopup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+#qrPopup.active {
+  display: flex;
+  cursor: default;
+}
+
+.qr-container {
+  position: relative;
+  background: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: default;
+  max-width: 260px;
+  box-sizing: border-box;
+}
+
+.qr-container .close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  user-select: none;
+  line-height: 1;
+}
+
+.markdown-content[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-modify: read-only;
+  -moz-user-modify: read-only;
+  caret-color: transparent; /* hide blinking cursor */
+}
+
+
+/* === Responsive === */
+
 @media (max-width: 768px) {
   .container {
-    width: 95%;
-    padding: 15px;
-    margin-top: 20px;
+    width: 94%;
+    padding: 20px;
   }
 
   textarea {
-    width: 91%;
+    min-height: 280px;
   }
 
-  button {
-    padding: 8px;
-    width: 96%;
-  }
-
-  .ad-space {
-    padding: 5px;
-    margin-top: 15px;
+  .copy-button,
+  .qr-button {
+    width: 48%;
+    min-width: auto;
+    margin-top: 12px;
   }
 
   .markdown-content {
-    padding: 8px;
-    width: 91%;
-  }
-
-  pre {
-    padding: 8px;
+    max-height: 50vh;
   }
 }
