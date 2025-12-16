@@ -33,24 +33,24 @@ const allowedReferrers = [
 ];
 
 // Middleware to check the referrer
-app.use('/:id', async (req, res, next) => {
-    const referrer = req.get('Referrer') || '';
-    const paste = await Paste.findById(req.params.id);
+// app.use('/:id', async (req, res, next) => {
+//     const referrer = req.get('Referrer') || '';
+//     const paste = await Paste.findById(req.params.id);
 
-    if (paste && paste.antiBypass) {
-        // Check if the referrer is in the allowed list
-        // for (const allowedReferrer of allowedReferrers) {
-        //     if (referrer.startsWith(allowedReferrer)) {
-        //         return next();
-        //     }
-        // }
+//     if (paste && paste.antiBypass) {
+//         Check if the referrer is in the allowed list
+//         for (const allowedReferrer of allowedReferrers) {
+//             if (referrer.startsWith(allowedReferrer)) {
+//                 return next();
+//             }
+//         }
 
-        // If referrer is not in the allowed list, redirect to the specified redirect URL
-        return res.redirect(paste.redirectUrl || `https://justpaster.xyz/${req.params.id}`);
-    }
+//         // If referrer is not in the allowed list, redirect to the specified redirect URL
+//         return res.redirect(paste.redirectUrl || `https://justpaster.xyz/${req.params.id}`);
+//     }
 
-    next();
-});
+//     next();
+// });
 
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("Connected to DB"))
