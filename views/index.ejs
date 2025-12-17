@@ -1,27 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Create Paste - JustPaster</title>
+  <title>JustPaster</title>
   <link rel="stylesheet" href="/style.css" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Create a New Paste</h1>
-    <form id="createPasteForm">
-      <textarea name="content" rows="24" placeholder="Write your markdown here..." required></textarea>
-      <button type="submit">Create Paste</button>
-    </form>
+  <div class="main-wrapper">
+    <div class="content-card">
+      
+      <div class="brand-header">
+        <a href="/">JustPaster</a>
+        <p>Minimalist code & text sharing.</p>
+      </div>
+
+      <form id="createPasteForm">
+        <textarea name="content" placeholder="// Paste your content here..." required spellcheck="false"></textarea>
+        <button type="submit" class="btn btn-primary btn-block">Create Paste</button>
+      </form>
+
+    </div>
+
+    <div class="footer-simple">
+      &copy; JustPaster &bull; Encrypted & Private
+    </div>
   </div>
+
+  <div id="toast" class="toast">Paste Created!</div>
 
   <script>
     $(document).ready(function () {
       $('#createPasteForm').on('submit', function (event) {
         event.preventDefault();
+        const btn = $('button[type="submit"]');
+        const originalText = btn.text();
+        
+        // Visual feedback
+        btn.text('Creating...').css('opacity', '0.7');
 
         const content = $("textarea[name='content']").val();
 
@@ -34,12 +52,12 @@
             window.location.href = `/${response.id}`;
           },
           error: function () {
-            alert("An error occurred while creating the paste.");
+            alert("Error creating paste.");
+            btn.text(originalText).css('opacity', '1');
           }
         });
       });
     });
   </script>
 </body>
-
 </html>

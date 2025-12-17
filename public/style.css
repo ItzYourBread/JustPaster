@@ -1,243 +1,269 @@
+/* Import clean fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
-  --bg: #1e1e1e;
-  --bg-alt: #252526;
-  --fg: #ffecf1;
-  --primary: #ffb3bf;
-  --secondary: #b37d8b;
-  --textarea-bg: #1e1e1e;
-  --textarea-fg: #ffd9e3;
-  --scroll-thumb: #b37d8b;
-  --link-hover: #fff;
+  /* Dark Gray Theme Variables */
+  --bg-body: #0a0a0a;       /* Very dark charcoal (almost black) */
+  --bg-card: #171717;       /* Matte dark gray card */
+  --bg-input: #0a0a0a;      /* Input background */
+  
+  --text-main: #ededed;     /* High contrast white */
+  --text-muted: #888888;    /* Muted gray */
+  
+  --border: #333333;        /* Subtle dark borders */
+  --focus-ring: #555555;    /* Focus state */
+  
+  --primary: #ededed;       /* White for primary buttons */
+  --primary-text: #000000;  /* Black text on primary buttons */
+  
+  --radius: 8px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  
+  /* Browser UI preferences */
+  color-scheme: dark;
 }
 
 body {
-  font-family: 'Fira Code', 'Courier New', monospace;
-  background-color: var(--bg);
-  color: var(--fg);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-main);
   margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.container {
-  width: 90%;
-  max-width: 900px;
-  margin: 40px auto;
-  background-color: var(--bg-alt);
-  padding: 30px 25px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  position: relative;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Aligns content near top */
   box-sizing: border-box;
 }
 
-h1 {
-  text-align: center;
-  color: var(--primary);
-  margin-bottom: 24px;
-  font-weight: 500;
-  user-select: none;
-}
-
-a h1 {
-  cursor: pointer;
-}
-
-p {
-  font-size: 14px;
-  margin-top: 15px;
-  color: var(--primary);
-  user-select: none;
-}
-
-/* === Form & Textarea for index.ejs === */
-
-form {
+/* Central Container */
+.main-wrapper {
   width: 100%;
+  max-width: 800px;
+  margin-top: 4vh;
 }
 
+/* Card Styling */
+.content-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  box-shadow: var(--shadow);
+}
+
+/* Brand Header */
+.brand-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.brand-header a {
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.brand-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+/* Textarea / Inputs */
 textarea {
   width: 100%;
-  background-color: var(--textarea-bg);
-  color: var(--textarea-fg);
-  border: none;
-  border-left: 4px solid var(--secondary);
-  padding: 14px 16px;
-  font-size: 15px;
-  font-family: 'Fira Code', monospace;
-  line-height: 1.5;
-  border-radius: 6px;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
   resize: vertical;
-  min-height: 320px;
-  white-space: pre-wrap;
-  overflow: auto;
+  min-height: 400px;
+  outline: none;
+  transition: border-color 0.2s ease;
   box-sizing: border-box;
 }
 
+textarea:focus {
+  border-color: var(--text-muted);
+}
+
+/* Scrollbar Styling */
 textarea::-webkit-scrollbar {
   width: 10px;
 }
-
 textarea::-webkit-scrollbar-thumb {
-  background-color: var(--scroll-thumb);
+  background-color: #333;
   border-radius: 5px;
 }
 
-button[type="submit"] {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  background-color: var(--secondary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
   cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.3s ease;
-}
-
-button[type="submit"]:hover {
-  background-color: var(--primary);
-}
-
-/* === Buttons for paste.ejs === */
-
-.copy-button,
-.qr-button {
-  background-color: var(--primary);
-  border: none;
-  padding: 10px 16px;
-  font-size: 15px;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  user-select: none;
-  margin-right: 10px;
-  display: inline-block;
+  transition: all 0.2s ease;
+  text-decoration: none;
   margin-top: 20px;
-  min-width: 120px;
 }
 
-.copy-button:hover,
-.qr-button:hover {
-  background-color: var(--secondary);
+.btn-block {
+  display: flex;
+  width: 100%;
 }
 
-/* === Paste display === */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+}
 
-.markdown-content {
-  background-color: var(--textarea-bg);
-  padding: 20px 24px;
-  border-left: 4px solid var(--primary);
-  border-radius: 8px;
-  font-family: 'Fira Code', monospace;
+.btn-primary:hover {
+  background-color: #ffffff; /* Brighter white on hover */
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 8px 16px;
+}
+
+.btn-outline:hover {
+  border-color: var(--text-main);
+  color: var(--text-main);
+}
+
+/* Paste View */
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.meta-stats {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.viewer-content {
+  overflow-x: auto;
+  font-size: 14px;
   line-height: 1.6;
-  color: var(--fg);
-  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  color: #c9d1d9; /* Standard dark mode code color */
   white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 70vh;
-  user-select: text;
+  word-wrap: break-word;
 }
 
-/* Highlight.js code blocks */
-pre code {
-  display: block;
-  white-space: pre;
-  padding: 16px 24px;
-  border-radius: 8px;
-  font-family: 'Fira Code', monospace;
-  overflow-x: auto;
-  line-height: 1.5;
-  background: none; /* let highlight.js theme style */
-  color: inherit;   /* let highlight.js theme style */
+/* Actions */
+.actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-a {
-  color: var(--primary);
-  text-decoration: underline;
-  cursor: pointer;
+/* Footer */
+.footer-simple {
+  text-align: center;
+  margin-top: 30px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  opacity: 0.6;
 }
 
-a:hover {
-  color: var(--link-hover);
-}
-
-/* === QR modal styles === */
-
-#qrPopup {
+/* QR Modal */
+.qr-modal {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85); /* Darker overlay */
+  backdrop-filter: blur(4px);
+  z-index: 999;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  cursor: pointer;
 }
 
-#qrPopup.active {
-  display: flex;
-  cursor: default;
-}
+.qr-modal.active { display: flex; }
 
-.qr-container {
-  position: relative;
-  background: white;
-  padding: 25px 30px;
-  border-radius: 12px;
+.qr-box {
+  background: var(--bg-card);
+  padding: 30px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   text-align: center;
-  cursor: default;
-  max-width: 260px;
-  box-sizing: border-box;
+  position: relative;
+  box-shadow: var(--shadow);
 }
 
-.qr-container .close {
+.qr-close {
   position: absolute;
   top: 10px;
-  right: 16px;
-  font-size: 22px;
-  font-weight: bold;
+  right: 15px;
   cursor: pointer;
-  color: #333;
-  user-select: none;
-  line-height: 1;
+  font-size: 1.2rem;
+  color: var(--text-muted);
 }
 
-.markdown-content[contenteditable="true"] {
-  user-select: text;
-  -webkit-user-modify: read-only;
-  -moz-user-modify: read-only;
-  caret-color: transparent; /* hide blinking cursor */
+.qr-close:hover { color: var(--text-main); }
+
+/* QR Code Image specific styling for dark mode */
+#qrcode img {
+  border: 10px solid white; /* Need white border to make QR readable on dark bg */
+  border-radius: 4px;
 }
 
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ededed;
+  color: black;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.toast.visible { opacity: 1; }
 
-/* === Responsive === */
+/* Responsive */
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  .content-card { padding: 25px; }
+  .actions { flex-direction: column; }
+  .btn-outline { width: 100%; }
+}
 
-@media (max-width: 768px) {
-  .container {
-    width: 94%;
-    padding: 20px;
-  }
-
-  textarea {
-    min-height: 280px;
-  }
-
-  .copy-button,
-  .qr-button {
-    width: 48%;
-    min-width: auto;
-    margin-top: 12px;
-  }
-
-  .markdown-content {
-    max-height: 50vh;
-  }
+/* HighlightJS Overrides for cleaner look */
+pre code.hljs {
+  padding: 0;
+  background: transparent;
 }
