@@ -59,6 +59,7 @@ mongoose.connect(process.env.MONGO_URL)
 // Routes
 app.use('/', indexRouter); // Public-facing routes
 app.use('/api', apiRouter); // API routes
+app.use('api/watchnsfw', require('./routes/watchnsfw.route')); // WatchNSFW routes
 
 app.listen(process.env.PORT, () => {
     console.log(`Server running at http://localhost:${process.env.PORT}`);
