@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
 const { Paste } = require('./models/paste');
 const app = express();
 
