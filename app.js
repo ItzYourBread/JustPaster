@@ -23,7 +23,8 @@ const allowedOrigins = [
   'http://127.0.0.1:5500',
   'http://localhost:5500',
   'https://justpaster.xyz',
-  'https://watchnsfw.com'
+  'https://watchnsfw.com',
+  'https://www.watchnsfw.com'
 ];
 
 app.use(cors({
