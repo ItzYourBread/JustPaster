@@ -18,6 +18,28 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/cdn', express.static(path.join(__dirname, 'cdn')));
 
+const allowedOrigins = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'https://justpaster.xyz',
+  'https://watchnsfw.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 const allowedReferrers = [
     'https://watchnsfw.co',
     'https://tavernleaks.com',
