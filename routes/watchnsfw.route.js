@@ -5,48 +5,98 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const router = express.Router();
-const BASE = "https://xvidapi.com/api.php/provide/vod";
+const BASE = process.env.XVID_API_BASE;
 
-/**
- * GET /api/watchnsfw/home?page=1
- * Homepage feed (semi-random, paginated)
- */
+// =====================
+// GEO PREFERENCES MAP
+// =====================
+const GEO_PREFERENCES = {
+  IN: { keywords: ["indian", "desi", "hindi", "bhabhi"], boost: 3 },
+  BD: { keywords: ["bangla", "bengali", "desi"], boost: 3 },
+  PK: { keywords: ["pakistani", "urdu", "desi"], boost: 3 },
+  US: { keywords: ["white", "american", "ebony", "latina"], boost: 1 },
+  DEFAULT: { keywords: ["asian", "latina", "ebony"], boost: 1 }
+};
+
+// =====================
+// HELPER: SCORE VIDEO
+// =====================
+function scoreVideo(video, prefs) {
+  let score = Math.random(); // base randomness
+
+  const text = (
+    (video.name || "") +
+    " " +
+    (video.type_name || "") +
+    " " +
+    (video.actor || []).join(" ")
+  ).toLowerCase();
+
+  for (const kw of prefs.keywords) {
+    if (text.includes(kw)) {
+      score += prefs.boost;
+    }
+  }
+
+  return score;
+}
+
+// =====================
+// GET /home
+// =====================
 router.get("/home", async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
 
     if (!BASE) {
-      console.error("XVID_API_BASE is missing");
       return res.status(500).json({ error: "API base not configured" });
     }
 
-    const url = `${BASE}?ac=videolist&page=${page}`;
-    console.log("FETCHING:", url);
+    // --- GEO DETECTION ---
+    const country =
+      req.headers["cf-ipcountry"] ||
+      req.headers["x-vercel-ip-country"] ||
+      req.headers["x-country-code"] ||
+      "DEFAULT";
 
-    const { data } = await axios.get(url);
+    const prefs = GEO_PREFERENCES[country] || GEO_PREFERENCES.DEFAULT;
+
+    // --- FETCH VIDEOS FROM XVID API ---
+    const url = `${BASE}?ac=videolist&page=${page}`;
+    console.log("HOME FETCH:", url, "GEO:", country);
+
+    const { data } = await axios.get(url, { timeout: 8000 });
 
     if (!data || !Array.isArray(data.list)) {
       return res.status(500).json({ error: "Invalid API response" });
     }
 
-    // Shuffle the list
-    const shuffled = [...data.list].sort(() => 0.5 - Math.random());
+    // --- SCORE VIDEOS BASED ON GEO PREFERENCES ---
+    const scored = data.list.map(video => ({
+      ...video,
+      _score: scoreVideo(video, prefs)
+    }));
 
+    // --- SORT BY SCORE DESCENDING ---
+    scored.sort((a, b) => b._score - a._score);
+
+    // --- RETURN TOP 24 VIDEOS ---
     res.json({
       page,
-      total: data.total || shuffled.length,
-      list: shuffled.slice(0, 24)
+      country,
+      total: data.total || scored.length,
+      list: scored.slice(0, 24)
     });
+
   } catch (err) {
     console.error("HOME API ERROR:", err.message);
     res.status(500).json({ error: "Failed to load home videos" });
   }
 });
 
-/**
- * GET /api/watchnsfw/watch/:id
- * Returns video details for watch.html
- */
+// =====================
+// GET /watch/:id
+// =====================
 router.get("/watch/:id", async (req, res) => {
   try {
     const { id } = req.params;
