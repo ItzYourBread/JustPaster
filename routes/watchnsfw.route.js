@@ -180,7 +180,7 @@ function scoreVideo(video, prefs, index = 0) {
 }
 
 // =====================
-// GET /home
+// GET /home (REVAMPED)
 // =====================
 router.get("/home", async (req, res) => {
   try {
@@ -188,13 +188,11 @@ router.get("/home", async (req, res) => {
       return res.status(500).json({ error: "API base not configured" });
     }
 
-    const PAGE_SIZE = 32;
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const offset = (page - 1) * PAGE_SIZE;
+    // 1. Params
+    const pg = Math.max(1, Number(req.query.pg) || Number(req.query.page) || 1);
+    const LIMIT = 32;
 
-    // -------------------
-    // GEO DETECTION
-    // -------------------
+    // 2. Geo Detection
     const country =
       req.headers["cf-ipcountry"] ||
       req.headers["x-vercel-ip-country"] ||
@@ -203,66 +201,59 @@ router.get("/home", async (req, res) => {
 
     const prefs = GEO_PREFERENCES[country] || GEO_PREFERENCES.DEFAULT;
 
-    // -------------------
-    // FETCH MULTIPLE PAGES
-    // -------------------
-    const FETCH_PAGES = 4; // 4 × ~30 = ~120 videos pool
-    const requests = [];
+    // 3. Selection Strategy
+    // We pick the first keyword from your Geo list to use as a "Search-based Home"
+    // This ensures that an Indian user sees Indian videos from page 1 to 1000.
+    const primaryKeyword = prefs.keywords[0]; 
 
-    for (let i = 1; i <= FETCH_PAGES; i++) {
-      requests.push(
-        axios.get(`${BASE}?ac=videolist&page=${i}`, { timeout: 8000 })
-      );
+    // 4. API Request
+    // We use 'wd' just like the search route, but it's automated for the home page.
+    let url = `${BASE}?ac=videolist&pg=${pg}&limit=${LIMIT}`;
+    
+    // If the country has specific keywords, we inject the primary one to "force" local content
+    if (country !== "DEFAULT" && primaryKeyword) {
+        url += `&wd=${encodeURIComponent(primaryKeyword)}`;
     }
 
-    const responses = await Promise.all(requests);
+    console.log(`HOME FETCH [${country}]: ${url}`);
 
-    // -------------------
-    // MERGE + DEDUPE
-    // -------------------
-    const map = new Map();
+    const { data } = await axios.get(url, { timeout: 10000 });
 
-    for (const r of responses) {
-      if (!Array.isArray(r.data?.list)) continue;
-
-      for (const video of r.data.list) {
-        if (!map.has(video.id)) {
-          map.set(video.id, video);
-        }
-      }
+    if (!data || !Array.isArray(data.list)) {
+      return res.json({ page: pg, totalPages: 0, list: [] });
     }
 
-    const uniqueVideos = Array.from(map.values());
+    let videos = data.list;
 
-    // -------------------
-    // GEO SCORING (STABLE)
-    // -------------------
-    const scored = uniqueVideos.map((video, index) => ({
-      ...video,
-      _score: scoreVideo(video, prefs) + index * 0.00001 // keeps order stable
-    }));
+    // 5. Fine-Tune Scoring (Optional)
+    // Since the API already filtered by the primary keyword, we just do a 
+    // quick sort to ensure the HIGHEST boost items within this list are top.
+    const finalScored = videos.map((v, i) => ({
+      ...v,
+      _score: scoreVideo(v, prefs, i)
+    })).sort((a, b) => b._score - a._score);
 
-    scored.sort((a, b) => b._score - a._score);
-
-    // -------------------
-    // PAGINATION (REAL)
-    // -------------------
-    const paged = scored.slice(offset, offset + PAGE_SIZE);
-
+    // 6. Response
     res.json({
-      page,
-      pageSize: PAGE_SIZE,
-      country,
-      total: scored.length,
-      list: paged
+      page: pg,
+      pageSize: LIMIT,
+      country: country,
+      total: data.total || 1000,
+      totalPages: data.total ? Math.ceil(data.total / LIMIT) : 100,
+      list: finalScored.slice(0, LIMIT)
     });
 
   } catch (err) {
     console.error("HOME API ERROR:", err.message);
-    res.status(500).json({ error: "Failed to load home videos" });
+    // Fallback: If search-based home fails, try a generic list
+    try {
+        const fallback = await axios.get(`${BASE}?ac=videolist&pg=${req.query.pg || 1}&limit=32`);
+        res.json({ page: Number(req.query.pg) || 1, list: fallback.data.list });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to load home videos" });
+    }
   }
 });
-
 
 // =====================
 // GET /watch/:id
@@ -326,13 +317,12 @@ router.get("/search", async (req, res) => {
       return res.status(500).json({ error: "API base not configured" });
     }
 
-    const query = (req.query.query || "").toLowerCase().trim();
-    const sort = req.query.sort || "relevance";
+    const query = (req.query.query || "").trim();
     const page = Math.max(1, Number(req.query.page) || 1);
+    const sort = req.query.sort || "relevance";
+    const LIMIT = 32;
 
-    const PAGE_SIZE = 32;
-    const offset = (page - 1) * PAGE_SIZE;
-
+    // 1. If no query, return empty list
     if (!query) {
       return res.json({
         page,
@@ -341,101 +331,58 @@ router.get("/search", async (req, res) => {
       });
     }
 
-    // -------------------
-    // GEO DETECTION
-    // -------------------
-    const country =
-      req.headers["cf-ipcountry"] ||
-      req.headers["x-vercel-ip-country"] ||
-      req.headers["x-country-code"] ||
-      "DEFAULT";
+    // 2. SEARCH DIRECTLY VIA API
+    // - 'wd' = the search keyword (searches the whole DB)
+    // - 'limit' = requests 32 items per page from the API
+    const url = `${BASE}?ac=videolist&wd=${encodeURIComponent(query)}&pg=${page}&limit=${LIMIT}`;
+    
+    console.log(`SEARCHING API: ${url}`);
 
-    const prefs = GEO_PREFERENCES[country] || GEO_PREFERENCES.DEFAULT;
+    const { data } = await axios.get(url, { timeout: 10000 });
 
-    // -------------------
-    // FETCH MULTIPLE PAGES
-    // -------------------
-    const FETCH_PAGES = 5; // ~150 videos pool
-    const requests = [];
-
-    for (let i = 1; i <= FETCH_PAGES; i++) {
-      requests.push(
-        axios.get(`${BASE}?ac=videolist&page=${i}`, { timeout: 8000 })
-      );
+    if (!data || !Array.isArray(data.list)) {
+      return res.json({
+        page,
+        totalPages: 0,
+        list: []
+      });
     }
 
-    const responses = await Promise.allSettled(requests);
+    let videos = data.list;
 
-    // -------------------
-    // MERGE + DEDUPE
-    // -------------------
-    const map = new Map();
-
-    for (const r of responses) {
-      if (r.status !== "fulfilled") continue;
-      if (!Array.isArray(r.value.data?.list)) continue;
-
-      for (const video of r.value.data.list) {
-        if (!map.has(video.id)) {
-          map.set(video.id, video);
-        }
-      }
+    // 3. RE-SORT RESULTS (Optional but recommended)
+    // The API might return results loosely. We push exact matches to the top.
+    if (sort === "relevance") {
+      const lowerQuery = query.toLowerCase();
+      videos.sort((a, b) => {
+        const nameA = (a.name || "").toLowerCase();
+        const nameB = (b.name || "").toLowerCase();
+        
+        const exactA = nameA.includes(lowerQuery) ? 1 : 0;
+        const exactB = nameB.includes(lowerQuery) ? 1 : 0;
+        
+        return exactB - exactA;
+      });
+    } else if (sort === "latest") {
+        // If the API supports sorting params, use them. Otherwise, we sort the page.
+        videos.sort((a, b) => (b.time || 0) - (a.time || 0));
     }
 
-    const allVideos = Array.from(map.values());
+    // 4. STRICT LIMIT (Safety check)
+    // Ensure we send exactly max 32 items, even if API ignores the limit param.
+    const finalVideos = videos.slice(0, LIMIT);
 
-    const scored = allVideos.map((video, index) => {
-      let score = scoreVideo(video, prefs, index);
-
-      const text = (
-        (video.name || "") +
-        " " +
-        (video.type_name || "") +
-        " " +
-        (video.actor || []).join(" ")
-      ).toLowerCase();
-
-      // Strong match
-      if (text.includes(query)) score += 4;
-
-      // Partial word match
-      for (const word of query.split(" ")) {
-        if (text.includes(word)) score += 1.2;
-      }
-
-      return { ...video, _score: score };
-    });
-
-
-    // -------------------
-    // SORTING
-    // -------------------
-    if (sort === "latest") {
-      scored.sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
-    }
-    else if (sort === "most_viewed") {
-      scored.sort((a, b) => Number(b.views || 0) - Number(a.views || 0));
-    }
-    else {
-      // relevance (default)
-      scored.sort((a, b) => b._score - a._score);
-    }
-
-    // -------------------
-    // PAGINATION
-    // -------------------
-    const paged = scored.slice(offset, offset + PAGE_SIZE);
-    const totalPages = Math.ceil(scored.length / PAGE_SIZE);
+    // 5. CALCULATE TOTAL PAGES
+    // If API provides 'total', use it. Otherwise, estimate based on current list.
+    const totalItems = data.total || finalVideos.length;
+    const totalPages = Math.ceil(totalItems / LIMIT);
 
     res.json({
       page,
-      country,
-      sort,
-      totalPages,
-      list: paged
+      totalPages: totalPages || 1,
+      total: totalItems,
+      list: finalVideos
     });
-
-    console.log(`SEARCH: "${query}" | Country: ${country} | Results: ${scored.length} | Page: ${page}/${totalPages}`);
 
   } catch (err) {
     console.error("SEARCH API ERROR:", err.message);
