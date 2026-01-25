@@ -180,19 +180,20 @@ function scoreVideo(video, prefs, index = 0) {
 }
 
 // =====================
-// GET /home (REVAMPED)
+// GET /home (INFINITE STYLE)
 // =====================
+const HOME_BATCH_SIZE = 100; // Number of videos per batch
+const HOME_POOLS = {}; // Memory cache keyed by country
+
 router.get("/home", async (req, res) => {
   try {
-    if (!BASE) {
-      return res.status(500).json({ error: "API base not configured" });
-    }
+    if (!BASE) return res.status(500).json({ error: "API base not configured" });
 
-    // 1. Params
-    const pg = Math.max(1, Number(req.query.pg) || Number(req.query.page) || 1);
-    const LIMIT = 32;
+    // 1️⃣ Params
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Number(req.query.limit) || 16; // what client requests per page
 
-    // 2. Geo Detection
+    // 2️⃣ Geo Detection
     const country =
       req.headers["cf-ipcountry"] ||
       req.headers["x-vercel-ip-country"] ||
@@ -200,60 +201,86 @@ router.get("/home", async (req, res) => {
       "DEFAULT";
 
     const prefs = GEO_PREFERENCES[country] || GEO_PREFERENCES.DEFAULT;
+    const primaryKeyword = prefs.keywords[0] || "";
 
-    // 3. Selection Strategy
-    // We pick the first keyword from your Geo list to use as a "Search-based Home"
-    // This ensures that an Indian user sees Indian videos from page 1 to 1000.
-    const primaryKeyword = prefs.keywords[0]; 
+    // 3️⃣ Initialize pool if needed
+    if (!HOME_POOLS[country]) HOME_POOLS[country] = [];
 
-    // 4. API Request
-    // We use 'wd' just like the search route, but it's automated for the home page.
-    let url = `${BASE}?ac=videolist&pg=${pg}&limit=${LIMIT}`;
-    
-    // If the country has specific keywords, we inject the primary one to "force" local content
-    if (country !== "DEFAULT" && primaryKeyword) {
-        url += `&wd=${encodeURIComponent(primaryKeyword)}`;
+    const pool = HOME_POOLS[country];
+
+    // 4️⃣ Determine if we need a new batch
+    const totalRequested = page * pageSize;
+    if (pool.length < totalRequested) {
+      // Calculate which "upstream pages" to fetch
+      let upstreamPage = Math.floor(pool.length / HOME_BATCH_SIZE) + 1;
+      let remaining = totalRequested - pool.length;
+
+      while (remaining > 0) {
+        let url = `${BASE}?ac=videolist&pg=${upstreamPage}&limit=${HOME_BATCH_SIZE}`;
+        if (country !== "DEFAULT" && primaryKeyword) {
+          url += `&wd=${encodeURIComponent(primaryKeyword)}`;
+        }
+
+        console.log(`HOME FETCH [${country}] batch ${upstreamPage}: ${url}`);
+
+        const { data } = await axios.get(url, { timeout: 15000 });
+
+        if (!data || !Array.isArray(data.list) || data.list.length === 0) break;
+
+        // Optional scoring
+        const scored = data.list.map((v, i) => ({
+          ...v,
+          _score: scoreVideo(v, prefs, pool.length + i),
+        })).sort((a, b) => b._score - a._score);
+
+        pool.push(...scored);
+        remaining -= scored.length;
+        upstreamPage += 1;
+      }
     }
 
-    console.log(`HOME FETCH [${country}]: ${url}`);
+    // 5️⃣ Slice the correct page for client
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = pool.slice(start, end);
 
-    const { data } = await axios.get(url, { timeout: 10000 });
-
-    if (!data || !Array.isArray(data.list)) {
-      return res.json({ page: pg, totalPages: 0, list: [] });
-    }
-
-    let videos = data.list;
-
-    // 5. Fine-Tune Scoring (Optional)
-    // Since the API already filtered by the primary keyword, we just do a 
-    // quick sort to ensure the HIGHEST boost items within this list are top.
-    const finalScored = videos.map((v, i) => ({
-      ...v,
-      _score: scoreVideo(v, prefs, i)
-    })).sort((a, b) => b._score - a._score);
-
-    // 6. Response
+    // 6️⃣ Send response
     res.json({
-      page: pg,
-      pageSize: LIMIT,
-      country: country,
-      total: data.total || 1000,
-      totalPages: data.total ? Math.ceil(data.total / LIMIT) : 100,
-      list: finalScored.slice(0, LIMIT)
+      page,
+      pageSize,
+      country,
+      total: pool.length + 1000, // estimated total
+      totalPages: Math.ceil((pool.length + 1000) / pageSize),
+      list: pageItems
     });
+
+    // 7️⃣ Optional: background fetch next batch if near the end
+    if (end + pageSize >= pool.length) {
+      const nextUpstreamPage = Math.floor(pool.length / HOME_BATCH_SIZE) + 1;
+      const nextUrl = `${BASE}?ac=videolist&pg=${nextUpstreamPage}&limit=${HOME_BATCH_SIZE}` +
+        (country !== "DEFAULT" && primaryKeyword ? `&wd=${encodeURIComponent(primaryKeyword)}` : "");
+
+      axios.get(nextUrl, { timeout: 15000 })
+        .then(({ data }) => {
+          if (data && Array.isArray(data.list) && data.list.length > 0) {
+            const scored = data.list.map((v, i) => ({
+              ...v,
+              _score: scoreVideo(v, prefs, pool.length + i),
+            })).sort((a, b) => b._score - a._score);
+
+            pool.push(...scored);
+            console.log(`Background fetched ${scored.length} more videos for ${country}`);
+          }
+        })
+        .catch(err => console.error("Background fetch failed:", err.message));
+    }
 
   } catch (err) {
     console.error("HOME API ERROR:", err.message);
-    // Fallback: If search-based home fails, try a generic list
-    try {
-        const fallback = await axios.get(`${BASE}?ac=videolist&pg=${req.query.pg || 1}&limit=32`);
-        res.json({ page: Number(req.query.pg) || 1, list: fallback.data.list });
-    } catch (e) {
-        res.status(500).json({ error: "Failed to load home videos" });
-    }
+    res.status(500).json({ error: "Failed to load home videos" });
   }
 });
+
 
 // =====================
 // GET /watch/:id
@@ -307,87 +334,181 @@ router.get("/watch/:id", async (req, res) => {
   }
 });
 
-
 // =====================
-// GET /search
+// GET /related (FRONTEND PAGINATION)
 // =====================
-router.get("/search", async (req, res) => {
+router.get("/related", async (req, res) => {
   try {
     if (!BASE) {
       return res.status(500).json({ error: "API base not configured" });
     }
 
-    const query = (req.query.query || "").trim();
+    const fullQuery = (req.query.q || "").trim();
+    const excludeId = req.query.exclude || "";
     const page = Math.max(1, Number(req.query.page) || 1);
+    const LIMIT = 200; // pool size
+
+    let list = [];
+
+    // HOME fallback
+    if (!fullQuery || fullQuery === "undefined" || fullQuery === "Updating") {
+      const home = await axios.get(`${BASE}?ac=videolist&pg=1&limit=${LIMIT}`);
+      list = home.data.list || [];
+    } else {
+      const words = fullQuery.split(/\s+/);
+      const attempts = [
+        fullQuery,
+        words.slice(0, 3).join(" "),
+        words[0]
+      ];
+
+      for (const term of attempts) {
+        if (!term || term.length < 3) continue;
+
+        const url = `${BASE}?ac=videolist&wd=${encodeURIComponent(term)}&pg=1&limit=${LIMIT}`;
+        const { data } = await axios.get(url, { timeout: 5000 });
+
+        if (Array.isArray(data?.list) && data.list.length) {
+          list = data.list;
+          break;
+        }
+      }
+
+      if (list.length === 0) {
+        const fallback = await axios.get(`${BASE}?ac=videolist&pg=1&limit=${LIMIT}`);
+        list = fallback.data.list || [];
+      }
+    }
+
+    // Dedupe only (NO slicing)
+    const related = list.filter(v => String(v.id) !== String(excludeId));
+
+    res.json({
+      list: related,
+      total: related.length
+    });
+
+  } catch (err) {
+    console.error("RELATED API ERROR:", err.message);
+    res.json({ list: [], total: 0 });
+  }
+});
+
+// =====================
+// GET /search (HOME-style / pooled, safe batches)
+// =====================
+const SEARCH_BATCH_SIZE = 100; // safe per upstream request
+const SEARCH_POOLS = {};       // in-memory pool keyed by query:sort
+
+router.get("/search", async (req, res) => {
+  try {
+    if (!BASE) return res.status(500).json({ error: "API base not configured" });
+
+    const query = (req.query.query || "").trim();
     const sort = req.query.sort || "relevance";
-    const LIMIT = 32;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.max(1, Number(req.query.limit) || 16);
 
-    // 1. If no query, return empty list
     if (!query) {
-      return res.json({
-        page,
-        totalPages: 0,
-        list: []
-      });
+      return res.json({ page, pageSize, total: 0, totalPages: 0, list: [] });
     }
 
-    // 2. SEARCH DIRECTLY VIA API
-    // - 'wd' = the search keyword (searches the whole DB)
-    // - 'limit' = requests 32 items per page from the API
-    const url = `${BASE}?ac=videolist&wd=${encodeURIComponent(query)}&pg=${page}&limit=${LIMIT}`;
-    
-    console.log(`SEARCHING API: ${url}`);
+    // pool key
+    const key = `${query}:${sort}`;
+    if (!SEARCH_POOLS[key]) SEARCH_POOLS[key] = [];
 
-    const { data } = await axios.get(url, { timeout: 10000 });
+    const pool = SEARCH_POOLS[key];
 
-    if (!data || !Array.isArray(data.list)) {
-      return res.json({
-        page,
-        totalPages: 0,
-        list: []
-      });
+    // how many items required to satisfy this request
+    const required = page * pageSize;
+
+    // fetch batches until we have 'required' items or upstream returns no more
+    if (pool.length < required) {
+      let upstreamPage = Math.floor(pool.length / SEARCH_BATCH_SIZE) + 1;
+      let remaining = required - pool.length;
+
+      while (remaining > 0) {
+        const url = `${BASE}?ac=videolist&wd=${encodeURIComponent(query)}&pg=${upstreamPage}&limit=${SEARCH_BATCH_SIZE}`;
+        console.log(`SEARCH FETCH [${query}] batch ${upstreamPage}: ${url}`);
+
+        try {
+          const { data } = await axios.get(url, { timeout: 15000 });
+          if (!data || !Array.isArray(data.list) || data.list.length === 0) break;
+
+          // optional lightweight scoring/sort (same rules as before)
+          let scored = data.list;
+          if (sort === "relevance") {
+            const lower = query.toLowerCase();
+            scored = scored
+              .map(v => ({ ...v, _score: (v.name || "").toLowerCase().includes(lower) ? 1 : 0 }))
+              .sort((a, b) => b._score - a._score);
+          } else if (sort === "latest") {
+            scored.sort((a, b) => (b.time || 0) - (a.time || 0));
+          }
+
+          pool.push(...scored);
+          remaining -= scored.length;
+          upstreamPage += 1;
+
+          // safety: avoid extremely large pools (memory cap)
+          const POOL_CAP = 1000;
+          if (pool.length >= POOL_CAP) break;
+
+        } catch (err) {
+          console.warn("SEARCH batch fetch failed:", err.message);
+          break;
+        }
+      }
     }
 
-    let videos = data.list;
+    // slice page for response
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = pool.slice(start, end);
 
-    // 3. RE-SORT RESULTS (Optional but recommended)
-    // The API might return results loosely. We push exact matches to the top.
-    if (sort === "relevance") {
-      const lowerQuery = query.toLowerCase();
-      videos.sort((a, b) => {
-        const nameA = (a.name || "").toLowerCase();
-        const nameB = (b.name || "").toLowerCase();
-        
-        const exactA = nameA.includes(lowerQuery) ? 1 : 0;
-        const exactB = nameB.includes(lowerQuery) ? 1 : 0;
-        
-        return exactB - exactA;
-      });
-    } else if (sort === "latest") {
-        // If the API supports sorting params, use them. Otherwise, we sort the page.
-        videos.sort((a, b) => (b.time || 0) - (a.time || 0));
-    }
-
-    // 4. STRICT LIMIT (Safety check)
-    // Ensure we send exactly max 32 items, even if API ignores the limit param.
-    const finalVideos = videos.slice(0, LIMIT);
-
-    // 5. CALCULATE TOTAL PAGES
-    // If API provides 'total', use it. Otherwise, estimate based on current list.
-    const totalItems = data.total || finalVideos.length;
-    const totalPages = Math.ceil(totalItems / LIMIT);
+    // compute totalPages based on current pool (server-driven; client will use it)
+    const totalPages = Math.max(1, Math.ceil(pool.length / pageSize));
 
     res.json({
       page,
-      totalPages: totalPages || 1,
-      total: totalItems,
-      list: finalVideos
+      pageSize,
+      total: pool.length,       // actual collected so far
+      totalPages,
+      list: pageItems
     });
+
+    // background prefetch: if the client is near the end of the pool, fetch another batch
+    if (end + pageSize >= pool.length) {
+      const nextPage = Math.floor(pool.length / SEARCH_BATCH_SIZE) + 1;
+      const nextUrl = `${BASE}?ac=videolist&wd=${encodeURIComponent(query)}&pg=${nextPage}&limit=${SEARCH_BATCH_SIZE}`;
+
+      axios.get(nextUrl, { timeout: 15000 })
+        .then(({ data }) => {
+          if (data && Array.isArray(data.list) && data.list.length > 0) {
+            let scored = data.list;
+            if (sort === "relevance") {
+              const lower = query.toLowerCase();
+              scored = scored
+                .map(v => ({ ...v, _score: (v.name || "").toLowerCase().includes(lower) ? 1 : 0 }))
+                .sort((a, b) => b._score - a._score);
+            } else if (sort === "latest") {
+              scored.sort((a, b) => (b.time || 0) - (a.time || 0));
+            }
+            // apply pool cap check
+            const POOL_CAP = 1000;
+            const toPush = scored.slice(0, Math.max(0, POOL_CAP - pool.length));
+            pool.push(...toPush);
+            console.log(`Background fetched ${toPush.length} more items for search "${query}"`);
+          }
+        })
+        .catch(err => console.warn("Background search fetch failed:", err.message));
+    }
 
   } catch (err) {
     console.error("SEARCH API ERROR:", err.message);
     res.status(500).json({ error: "Failed to search videos" });
   }
 });
+
 
 module.exports = router;
