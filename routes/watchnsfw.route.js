@@ -609,4 +609,79 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// =====================
+// GET /category (SAFE + PAGINATED)
+// =====================
+const CATEGORY_BATCH_SIZE = 100;
+const CATEGORY_POOLS = {}; // key: categoryId
+
+router.get("/category", async (req, res) => {
+  try {
+    if (!BASE) return res.status(500).json({ error: "API base not configured" });
+
+    const categoryId = String(req.query.id || "").trim();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.max(1, Number(req.query.limit) || 16);
+
+    if (!categoryId) {
+      return res.json({
+        page,
+        pageSize,
+        total: 0,
+        totalPages: 0,
+        list: []
+      });
+    }
+
+    // Init pool
+    if (!CATEGORY_POOLS[categoryId]) CATEGORY_POOLS[categoryId] = [];
+    const pool = CATEGORY_POOLS[categoryId];
+
+    const required = page * pageSize;
+
+    if (pool.length < required) {
+      let upstreamPage = Math.floor(pool.length / CATEGORY_BATCH_SIZE) + 1;
+      let remaining = required - pool.length;
+
+      while (remaining > 0) {
+        const url = `${BASE}?ac=videolist&t=${categoryId}&pg=${upstreamPage}&limit=${CATEGORY_BATCH_SIZE}`;
+        console.log(`CATEGORY FETCH [${categoryId}] page ${upstreamPage}`);
+
+        const { data } = await axios.get(url, { timeout: 15000 });
+
+        if (!data || !Array.isArray(data.list) || data.list.length === 0) break;
+
+        // 🔐 SAFETY FILTER
+        const safeVideos = data.list.filter(isSafe);
+        if (safeVideos.length === 0) break;
+
+        pool.push(...safeVideos);
+        remaining -= safeVideos.length;
+        upstreamPage += 1;
+
+        // 🧠 Memory cap
+        const POOL_CAP = 1000;
+        if (pool.length >= POOL_CAP) break;
+      }
+    }
+
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = pool.slice(start, end);
+
+    res.json({
+      page,
+      pageSize,
+      total: pool.length,
+      totalPages: Math.max(1, Math.ceil(pool.length / pageSize)),
+      list: pageItems
+    });
+
+  } catch (err) {
+    console.error("CATEGORY API ERROR:", err.message);
+    res.status(500).json({ error: "Failed to load category videos" });
+  }
+});
+
+
 module.exports = router;
