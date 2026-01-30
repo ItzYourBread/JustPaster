@@ -689,75 +689,50 @@ router.get("/category", async (req, res) => {
 // =====================
 router.get("/sitemap-video.xml", async (req, res) => {
   try {
-    if (!BASE) return res.status(500).send("API base not configured");
-
-    // 1. Fetch "Recent" videos (Pages 1 & 2 to get ~40-100 items)
-    // Google prefers freshness over quantity for dynamic sitemaps.
-    const p1 = axios.get(`${BASE}?ac=videolist&pg=1&limit=50`);
-    const p2 = axios.get(`${BASE}?ac=videolist&pg=2&limit=50`);
-
-    const [r1, r2] = await Promise.all([p1, p2]);
-
-    // Combine lists
-    let allVideos = [
-      ...(r1.data.list || []),
-      ...(r2.data.list || [])
-    ];
-
-    // 2. Filter using your existing global isSafe function
-    // (We must use your 'isSafe' so we don't index banned words!)
-    allVideos = allVideos.filter(isSafe);
-
-    // 3. Start XML Builder
+    // 1. Fetch the list (Make sure your API returns the full detail/episodes in the list)
+    // If the list view doesn't include 'episodes', use 'ac=detail' instead of 'ac=videolist'
+    const { data } = await axios.get(`${BASE}?ac=videolist&pg=1&limit=100`);
+    
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
             xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">`;
 
-    // 4. Loop and format
-    for (const video of allVideos) {
-      
-      // 1. Replicate your embed link logic
-      let embedLink = "";
-      if (video.episodes && video.episodes.server_data) {
+    data.list.filter(isSafe).forEach(video => {
+      // 2. Extract the actual link_embed correctly
+      let playerUrl = "";
+      try {
         const serverData = video.episodes.server_data;
-        const episodeKeys = Object.keys(serverData);
-        if (episodeKeys.length > 0) {
-          embedLink = serverData[episodeKeys[0]].link_embed || "";
-        }
+        const firstKey = Object.keys(serverData)[0]; // Usually "Full"
+        playerUrl = serverData[firstKey].link_embed;
+      } catch (e) {
+        // Fallback if structure is missing
+        playerUrl = `https://www.watchnsfw.com/watch.html?id=${video.id}&embed=true`;
       }
 
-      // 2. If the API list view doesn't provide episodes, 
-      // we have to use a fallback or fetch details (which is slow).
-      // Shortcut: If your API uses a standard pattern, use that:
-      const playerUrl = embedLink || `https://justpaster.xyz/api/watchnsfw/embed/${videoId}`;
-
-      // 3. Ensure playerUrl is NOT the same as pageUrl
-      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${videoId}`;
+      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${video.id}`;
+      const title = (video.name || "Video").replace(/&/g, '&amp;');
+      const thumb = video.thumb_url || video.poster_url || "";
 
       xml += `
-<url>
-    <loc>${pageUrl}</loc>
-    <video:video>
-        <video:thumbnail_loc>${thumb}</video:thumbnail_loc>
-        <video:title>${title}</video:title>
-        <video:description>${desc}</video:description>
-        <video:player_loc>${playerUrl}</video:player_loc> <video:duration>600</video:duration>
-        <video:publication_date>${pubDate}</video:publication_date>
-        <video:family_friendly>no</video:family_friendly>
-    </video:video>
-</url>`;
-    }
+        <url>
+            <loc>${pageUrl}</loc>
+            <video:video>
+                <video:thumbnail_loc>${thumb}</video:thumbnail_loc>
+                <video:title>${title}</video:title>
+                <video:description>Watch ${title} in HD on WatchNSFW.</video:description>
+                <video:player_loc>${playerUrl}</video:player_loc> 
+                <video:duration>600</video:duration>
+                <video:publication_date>${video.created_at || new Date().toISOString()}</video:publication_date>
+                <video:family_friendly>no</video:family_friendly>
+            </video:video>
+        </url>`;
+    });
 
-    // 5. Close XML
     xml += `</urlset>`;
-
-    // 6. Send
     res.header('Content-Type', 'application/xml');
     res.send(xml);
-
   } catch (err) {
-    console.error("SITEMAP ERROR:", err.message);
-    res.status(500).send("Error generating sitemap");
+    res.status(500).send("Sitemap Error");
   }
 });
 
