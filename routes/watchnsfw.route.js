@@ -697,10 +697,10 @@ router.get("/sitemap-video.xml", async (req, res) => {
     const p2 = axios.get(`${BASE}?ac=videolist&pg=2&limit=50`);
 
     const [r1, r2] = await Promise.all([p1, p2]);
-    
+
     // Combine lists
     let allVideos = [
-      ...(r1.data.list || []), 
+      ...(r1.data.list || []),
       ...(r2.data.list || [])
     ];
 
@@ -715,34 +715,37 @@ router.get("/sitemap-video.xml", async (req, res) => {
 
     // 4. Loop and format
     for (const video of allVideos) {
-      // Clean data
-      const videoId = video.id;
-      const title = (video.name || "Untitled").replace(/&/g, '&amp;').replace(/</g, '').replace(/>/g, '').replace(/"/g, '');
-      const thumb = video.thumb_url || video.vod_pic || "https://www.watchnsfw.com/images/placeholder.png";
-      const desc = `Watch ${title} in HD.`;
       
-      // URLs
-      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${videoId}`;
-      // Extract Embed (Reusing your logic from the /watch route roughly)
-      // Since 'videolist' usually doesn't have the full embed, we point player_loc to the page or a fallback
-      // Ideally, use the Page URL if you don't have the direct MP4/Embed link handy in the list view.
-      const playerUrl = pageUrl; 
+      // 1. Replicate your embed link logic
+      let embedLink = "";
+      if (video.episodes && video.episodes.server_data) {
+        const serverData = video.episodes.server_data;
+        const episodeKeys = Object.keys(serverData);
+        if (episodeKeys.length > 0) {
+          embedLink = serverData[episodeKeys[0]].link_embed || "";
+        }
+      }
 
-      const pubDate = video.time ? new Date().toISOString() : new Date().toISOString(); // Fallback to now if no date
+      // 2. If the API list view doesn't provide episodes, 
+      // we have to use a fallback or fetch details (which is slow).
+      // Shortcut: If your API uses a standard pattern, use that:
+      const playerUrl = embedLink || `https://justpaster.xyz/api/watchnsfw/embed/${videoId}`;
+
+      // 3. Ensure playerUrl is NOT the same as pageUrl
+      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${videoId}`;
 
       xml += `
-        <url>
-            <loc>${pageUrl}</loc>
-            <video:video>
-                <video:thumbnail_loc>${thumb}</video:thumbnail_loc>
-                <video:title>${title}</video:title>
-                <video:description>${desc}</video:description>
-                <video:player_loc>${playerUrl}</video:player_loc>
-                <video:duration>600</video:duration>
-                <video:publication_date>${pubDate}</video:publication_date>
-                <video:family_friendly>no</video:family_friendly>
-            </video:video>
-        </url>`;
+<url>
+    <loc>${pageUrl}</loc>
+    <video:video>
+        <video:thumbnail_loc>${thumb}</video:thumbnail_loc>
+        <video:title>${title}</video:title>
+        <video:description>${desc}</video:description>
+        <video:player_loc>${playerUrl}</video:player_loc> <video:duration>600</video:duration>
+        <video:publication_date>${pubDate}</video:publication_date>
+        <video:family_friendly>no</video:family_friendly>
+    </video:video>
+</url>`;
     }
 
     // 5. Close XML
