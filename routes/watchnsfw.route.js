@@ -684,4 +684,78 @@ router.get("/category", async (req, res) => {
 });
 
 
+// =====================
+// GET /sitemap-video.xml (Dynamic Generator)
+// =====================
+router.get("/sitemap-video.xml", async (req, res) => {
+  try {
+    if (!BASE) return res.status(500).send("API base not configured");
+
+    // 1. Fetch "Recent" videos (Pages 1 & 2 to get ~40-100 items)
+    // Google prefers freshness over quantity for dynamic sitemaps.
+    const p1 = axios.get(`${BASE}?ac=videolist&pg=1&limit=50`);
+    const p2 = axios.get(`${BASE}?ac=videolist&pg=2&limit=50`);
+
+    const [r1, r2] = await Promise.all([p1, p2]);
+    
+    // Combine lists
+    let allVideos = [
+      ...(r1.data.list || []), 
+      ...(r2.data.list || [])
+    ];
+
+    // 2. Filter using your existing global isSafe function
+    // (We must use your 'isSafe' so we don't index banned words!)
+    allVideos = allVideos.filter(isSafe);
+
+    // 3. Start XML Builder
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+            xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">`;
+
+    // 4. Loop and format
+    for (const video of allVideos) {
+      // Clean data
+      const videoId = video.id;
+      const title = (video.name || "Untitled").replace(/&/g, '&amp;').replace(/</g, '').replace(/>/g, '').replace(/"/g, '');
+      const thumb = video.thumb_url || video.vod_pic || "https://www.watchnsfw.com/images/placeholder.png";
+      const desc = `Watch ${title} in HD.`;
+      
+      // URLs
+      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${videoId}`;
+      // Extract Embed (Reusing your logic from the /watch route roughly)
+      // Since 'videolist' usually doesn't have the full embed, we point player_loc to the page or a fallback
+      // Ideally, use the Page URL if you don't have the direct MP4/Embed link handy in the list view.
+      const playerUrl = pageUrl; 
+
+      const pubDate = video.time ? new Date().toISOString() : new Date().toISOString(); // Fallback to now if no date
+
+      xml += `
+        <url>
+            <loc>${pageUrl}</loc>
+            <video:video>
+                <video:thumbnail_loc>${thumb}</video:thumbnail_loc>
+                <video:title>${title}</video:title>
+                <video:description>${desc}</video:description>
+                <video:player_loc>${playerUrl}</video:player_loc>
+                <video:duration>600</video:duration>
+                <video:publication_date>${pubDate}</video:publication_date>
+                <video:family_friendly>no</video:family_friendly>
+            </video:video>
+        </url>`;
+    }
+
+    // 5. Close XML
+    xml += `</urlset>`;
+
+    // 6. Send
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+
+  } catch (err) {
+    console.error("SITEMAP ERROR:", err.message);
+    res.status(500).send("Error generating sitemap");
+  }
+});
+
 module.exports = router;
