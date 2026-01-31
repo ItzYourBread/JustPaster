@@ -706,10 +706,10 @@ router.get("/sitemap-video.xml", async (req, res) => {
         playerUrl = serverData[firstKey].link_embed;
       } catch (e) {
         // Fallback if structure is missing
-        playerUrl = `https://www.watchnsfw.com/watch.html?id=${video.id}&embed=true`;
+        playerUrl = `https://www.watchnsfw.com/watch?id=${video.id}&embed=true`;
       }
 
-      const pageUrl = `https://www.watchnsfw.com/watch.html?id=${video.id}`;
+      const pageUrl = `https://www.watchnsfw.com/watch?id=${video.id}`;
       const title = (video.name || "Video").replace(/&/g, '&amp;');
       const thumb = video.thumb_url || video.poster_url || "";
 
