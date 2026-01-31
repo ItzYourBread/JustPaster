@@ -736,20 +736,17 @@ router.get("/sitemap-video.xml", async (req, res) => {
   }
 });
 
-// =====================
-// GET /share/:id (The Final Fix)
-// =====================
-router.get("/share/:id", async (req, res) => {
+router.get("/bot-meta/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { data } = await axios.get(`${BASE}?ac=detail&ids=${id}`);
     
-    if (!data?.list?.[0]) return res.redirect(`https://www.watchnsfw.com/watch.html?id=${id}`);
+    if (!data?.list?.[0]) return res.status(404).send("Not Found");
 
     const video = data.list[0];
     const title = (video.name || "Watch Video").replace(/"/g, '&quot;');
     const thumb = video.thumb_url || video.poster_url || "";
-    const redirectUrl = `https://www.watchnsfw.com/watch.html?id=${id}`;
+    const redirectUrl = `https://www.watchnsfw.com/watch?id=${id}`;
 
     res.setHeader('Content-Type', 'text/html');
     res.send(`
@@ -763,15 +760,12 @@ router.get("/share/:id", async (req, res) => {
         <meta property="og:url" content="${redirectUrl}">
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:image" content="${thumb}">
-        <script>window.location.href = "${redirectUrl}";</script>
       </head>
-      <body style="background:#000; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh;">
-        <p>Redirecting to video...</p>
-      </body>
+      <body style="background:#000;"></body>
       </html>
     `);
   } catch (err) {
-    res.redirect(`https://www.watchnsfw.com/watch.html?id=${id}`);
+    res.status(500).send("Error");
   }
 });
 
