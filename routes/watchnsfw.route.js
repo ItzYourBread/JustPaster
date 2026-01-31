@@ -736,4 +736,40 @@ router.get("/sitemap-video.xml", async (req, res) => {
   }
 });
 
+// =====================
+// GET /bot-meta/:id 
+// =====================
+router.get("/bot-meta/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data } = await axios.get(`${BASE}?ac=detail&ids=${id}`);
+    
+    if (!data?.list?.[0]) return res.status(404).send("Video Not Found");
+
+    const video = data.list[0];
+    const title = (video.name || "Watch Video").replace(/"/g, '&quot;');
+    const thumb = video.thumb_url || video.poster_url || "";
+    const pageUrl = `https://www.watchnsfw.com/watch.html?id=${id}`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${title}</title>
+        <meta property="og:title" content="${title}">
+        <meta property="og:image" content="${thumb}">
+        <meta property="og:description" content="Watch ${title} in HD on WatchNSFW.">
+        <meta property="og:url" content="${pageUrl}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="${thumb}">
+      </head>
+      <body style="background:#000;"></body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
