@@ -31,6 +31,6 @@ WatchNSFW is a free service supported entirely through advertising. There are no
 
 We believe in keeping things simple, transparent, and user-first. WatchNSFW exists to deliver adult content efficiently—without unnecessary complexity, aggressive data collection, or misleading practices.
 
-For full details on acceptable usage, limitations, and responsibilities, please review our [Terms of Service](/article?slug=Terms%20Of%20Service) and [Privacy Policy](/article?slug=Privacy%20Policy).
+For full details on acceptable usage, limitations, and responsibilities, please review our [Terms of Service](/article?slug=Terms%20of%20Service) and [Privacy Policy](/article?slug=Privacy%20Policy).
 
 WatchNSFW continues to evolve with modern web standards, faster delivery, and cleaner design—so you can focus on what matters most: uninterrupted adult entertainment.
