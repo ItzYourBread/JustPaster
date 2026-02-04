@@ -1,45 +1,147 @@
-# WatchNSFW Term of Service
+# WatchNSFW Terms of Service
 
-**Welcome to WatchNSFW!**
+**Last Updated: 2026**
 
-Please read these Terms and Conditions (hereafter referred to as "T&C") carefully before using our website., www.watchnsfw.com ("Website"). By accessing or using the Website, you agree to be bound by these T&C, which may be updated from time to time without prior notice.
+Welcome to **WatchNSFW** (“we”, “our”, or “us”).  
+By accessing or using https://www.watchnsfw.com (the “Website”), you agree to be bound by these Terms of Service (“Terms”). If you do not agree with these Terms, you must not access or use the Website.
 
-1. **Age Requirement**
+---
 
-    - In order to use our services, you must confirm that you are at least 18 years old. If you do not meet this requirement, please do not access or use the Website.
+## 1. Age Restriction (18+ Only)
 
-2. **Term of Use**
+WatchNSFW is intended **strictly for adults**.
 
-    - You may only use the Website for legal purposes and in accordance with applicable law and regulations. Any unauthorized use of the Website may violate copyrights, trademarks, privacy laws, and other intellectual property rights.
-    - You agree to not upload, post or transmit any content that could: a) infringe any third party's intellectual property rights; b) defame, harass or discriminate against any individual or group based on race, gender, sexual orientation, religion, national origin, or disability; c) encourage violence or harmful acts; d) promote illegal activities or provide information for such activities.
-    - You agree not to use the Website to transmit unsolicited commercial messages or spam emails.
-    - Any content uploaded to the website must comply with the Community Guidelines of WatchNSFW.
+By accessing the Website, you confirm that:
+- You are **at least 18 years old** (or the legal age of majority in your jurisdiction)
+- You are legally permitted to view adult content under applicable local laws
 
-3. **Warranty and Liability**
+If you do not meet these requirements, you must leave the Website immediately.
 
-    - The Website is provided as is, without any warranties, express or implied. We do not guarantee that the information on this Website will be accurate, complete, or up-to-date.
-    - Under no circumstances shall we be held responsible for any direct, indirect, incidental, consequential, or punitive damages resulting from access to or use of the Website.
+---
 
-4. **Termination**
+## 2. Nature of the Service
 
-    - We reserve the right to suspend or terminate your account immediately and without notice if you violate these T&C or if you fail to comply with any applicable laws or regulations.
-    - You agree that any termination of your account shall not relieve you of the obligation to abide by these T&C.
+WatchNSFW is a **free, ad-supported adult entertainment platform** that provides access to NSFW videos and related content.
 
-5. **Indemnification**
+- We **do not offer user accounts or registration**
+- We **do not allow users to upload content**
+- We **do not provide paid subscriptions or premium memberships**
 
-    - You will indemnify and hold us harmless from any claim, loss, damage, or expense arising from your use of our Website or your breach of these T&C.
+All content is provided “as available” for personal, non-commercial viewing only.
 
-6. **Governing Law**
+---
 
-    - These T&C shall be governed by and interpreted in accordance with the laws of the United States. Any dispute arising under these T&C shall be resolved exclusively by the courts located in the state of New York, USA.
+## 3. Acceptable Use
 
-7. **Entire Agreement**
+You agree to use the Website only for lawful purposes.
 
-    - This document constitutes the entire agreement between you and us regarding the use of our Website and supersedes all prior agreements or understandings, whether written or oral.
+You must **not**:
+- Violate any applicable local, national, or international laws
+- Attempt to disrupt, damage, or interfere with Website functionality
+- Use bots, scrapers, or automated systems without permission
+- Circumvent age verification, ads, or access restrictions
+- Use the Website to distribute malware, spam, or malicious code
+- Misrepresent your age or identity
 
-8. **Modifications**
-    - We reserve the right to modify these T&C at any time without notice. Such modifications shall be effective immediately upon posting them on the Website. Your continued access to the Website after such modifications constitutes your agreement to be bound by such modified T&C.
+Any misuse may result in immediate restriction of access.
 
-By using our Website, you acknowledge that you have read and understood these Terms and Conditions and agree to abide by them in all respects.
+---
 
-WATCHNSFW Team
+## 4. Content Disclaimer
+
+- WatchNSFW does **not claim ownership** of third-party content displayed or embedded on the Website
+- Content is provided for informational and entertainment purposes only
+- We do not guarantee accuracy, availability, or completeness of any content
+
+If you believe content infringes copyright or violates laws, please refer to our **DMCA Clause** for takedown requests.
+
+---
+
+## 5. No User Accounts or Data Storage
+
+WatchNSFW does **not** require or support:
+- User registration
+- Login credentials
+- User profiles
+- Passwords
+- Payment information
+
+We do not knowingly collect personally identifiable information.  
+Any limited technical data (such as cookies, analytics, or advertising identifiers) is handled according to our **Privacy Policy**.
+
+---
+
+## 6. Advertising
+
+The Website is supported through third-party advertising networks.
+
+By using WatchNSFW, you acknowledge that:
+- Ads may be displayed before, during, or alongside content
+- Ad content is provided by third parties
+- We are not responsible for external advertiser websites or services
+
+---
+
+## 7. Warranty Disclaimer
+
+The Website is provided **“AS IS” and “AS AVAILABLE”**, without warranties of any kind.
+
+We make no guarantees regarding:
+- Website uptime or availability
+- Accuracy or reliability of content
+- Error-free operation
+- Compatibility with all devices or browsers
+
+Your use of the Website is entirely at your own risk.
+
+---
+
+## 8. Limitation of Liability
+
+To the fullest extent permitted by law, WatchNSFW shall **not** be liable for any:
+- Direct or indirect damages
+- Loss of data or profits
+- Legal consequences arising from misuse
+- Issues caused by third-party content or advertisements
+
+---
+
+## 9. Termination of Access
+
+We reserve the right to:
+- Restrict or block access to the Website at any time
+- Take action against abusive or unlawful usage
+- Update access rules without prior notice
+
+Because there are no user accounts, termination applies to Website access only.
+
+---
+
+## 10. Changes to These Terms
+
+We may update these Terms at any time.
+
+- Updates take effect immediately upon posting
+- Continued use of the Website constitutes acceptance of the revised Terms
+
+We encourage users to review this page periodically.
+
+---
+
+## 11. Governing Law
+
+These Terms shall be governed by and interpreted in accordance with **applicable international internet laws**, without regard to conflict of law principles.
+
+Any disputes shall be resolved in a competent jurisdiction as determined by applicable law.
+
+---
+
+## 12. Contact & Legal Notices
+
+For legal concerns, copyright notices, or DMCA requests, please refer to the relevant sections on the Website.
+
+---
+
+By accessing WatchNSFW, you acknowledge that you have read, understood, and agreed to these Terms of Service.
+
+**— WatchNSFW Team**
