@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const cors = require('cors');
 const { Paste } = require('./models/paste');
+const axios = require('axios');
 const app = express();
 
 // Import routes
@@ -43,17 +44,17 @@ app.use(cors({
 }));
 
 const allowedReferrers = [
-    'https://watchnsfw.co',
-    'https://tavernleaks.com',
-    'https://best-links.org',
-    'https://hentai-leaks.com',
-    'https://free-leaks.com',
-    'https://kmendation.com',
-    'https://linkvertise.com',
-    'https://tonordersitye.com',
-    'https://bleleadersto.com',
-    'https://daughablelea.com',
-    'https://lockr.so'
+  'https://watchnsfw.co',
+  'https://tavernleaks.com',
+  'https://best-links.org',
+  'https://hentai-leaks.com',
+  'https://free-leaks.com',
+  'https://kmendation.com',
+  'https://linkvertise.com',
+  'https://tonordersitye.com',
+  'https://bleleadersto.com',
+  'https://daughablelea.com',
+  'https://lockr.so'
 ];
 
 // Middleware to check the referrer
@@ -77,8 +78,8 @@ const allowedReferrers = [
 // });
 
 mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("Connected to DB"))
-    .catch((err) => { throw err; });
+  .then(() => console.log("Connected to DB"))
+  .catch((err) => { throw err; });
 
 // Routes
 app.use('/', indexRouter); // Public-facing routes
@@ -86,6 +87,111 @@ app.use('/api', apiRouter); // API routes
 app.use('/api/watchnsfw', require('./routes/watchnsfw.route')); // WatchNSFW routes
 app.use('/api/watchnsfw', require('./routes/articles.route')); // Articles routes
 
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1448627617174650973/DOTQfRm5XZLNQ89xhau1iiQOOiDI1DL6k7dTgX5sM9CRV3sen5IIAEORp6gBUTst-bqO';
+const API_BASE = 'https://xvidapi.com/api.php/provide/vod?ac=detail&ids=';
+
+// Function to generate random video ID
+function getRandomVideoId() {
+  return Math.floor(Math.random() * 1106945) + 1; // 1 - 1106945
+}
+
+// Function to check if a video is "white/legal XX"
+function isValidVideo(video) {
+  const forbiddenCountries = [
+    'India',
+    'Pakistan',
+    'Bangladesh',
+    'Desi',
+    'Indian',
+    'Pakistani',
+    'Bangladeshi',
+    'South Asian',
+    'Middle Eastern',
+    'Arab',
+    'Turkish',
+    'Iranian',
+    'Afghan',
+    'Central Asian',
+    'Southeast Asian',
+    'Indonesian',
+    'Filipino',
+    'Vietnamese',
+    'Thai',
+    'Malay',
+    'Sri Lankan',
+    'Nepalese',
+    'Bhutanese',
+    'Malaysian',
+    'Burmese',
+    'Cambodian',
+    'Laotian',
+    'Myanmar',
+    'Bruneian',
+    'Timorese',
+    'Mongolian',
+    'Kazakh',
+    'Uzbek',
+    'Turkmen',
+    'Kyrgyz',
+    'Gay',
+    'Lesbian',
+    'Transgender',
+    'LGBT',
+    'Queer',
+    'Bisexual',
+    'Pansexual',
+    'Asexual',
+    'Non-binary',
+    'Genderqueer',
+    'Intersex',
+    'Two-Spirit',
+    'Drag',
+    'Crossdresser',
+  ];
+  const videoCountry = video.country?.[0]?.toLowerCase() || '';
+  return !forbiddenCountries.some(c => videoCountry.includes(c.toLowerCase()));
+}
+
+// Fetch random video and send to Discord
+async function fetchAndSend() {
+  try {
+    let video;
+    let attempts = 0;
+
+    while (!video && attempts < 10) { // Try max 10 times to find valid video
+      const id = getRandomVideoId();
+      const res = await axios.get(`${API_BASE}${id}`);
+      const list = res.data.list || [];
+
+      if (list.length && isValidVideo(list[0])) {
+        video = list[0];
+      }
+
+      attempts++;
+    }
+
+    if (!video) return console.log('No valid video found after 10 attempts');
+
+    // Prepare Discord message
+    const discordData = {
+      content: `https://www.watchnsfw.com/watch?id=${video.id}`
+    };
+
+    // Send webhook
+    await axios.post(WEBHOOK_URL, discordData);
+    console.log(`Uploaded video ${video.id} to Discord`);
+
+  } catch (err) {
+    console.error('Error fetching/sending video:', err.message);
+  }
+}
+
+// Schedule 5 times per hour = every 12 minutes
+setInterval(fetchAndSend, 12 * 60 * 1000); // 5 times per hour
+
+// Optional: run immediately on start
+fetchAndSend();
+
 app.listen(process.env.PORT, () => {
-    console.log(`Server running at http://localhost:${process.env.PORT}`);
+  console.log(`Server running at http://localhost:${process.env.PORT}`);
 });
