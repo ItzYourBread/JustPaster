@@ -159,7 +159,7 @@ async function fetchAndSend() {
 }
 
 // For testing: every 5 seconds
-setInterval(fetchAndSend, 5 * 1000);
+setInterval(fetchAndSend, 12 * 60 * 1000); // 5 times per hour
 
 // Optional: run immediately on start
 fetchAndSend();
