@@ -85,10 +85,7 @@ mongoose.connect(process.env.MONGO_URL)
 // Routes
 app.use('/', indexRouter); // Public-facing routes
 app.use('/api', apiRouter); // API routes
-app.use('/api/watchnsfw', require('./routes/watchnsfw.route')); // WatchNSFW routes
 app.use('/api/watchnsfw', require('./routes/articles.route')); // Articles routes
-
-
 
 const WEBHOOKS = [
   'https://discord.com/api/webhooks/1448627617174650973/DOTQfRm5XZLNQ89xhau1iiQOOiDI1DL6k7dTgX5sM9CRV3sen5IIAEORp6gBUTst-bqO', // Avaritia  
