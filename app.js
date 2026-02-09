@@ -151,9 +151,11 @@ async function fetchAndSend() {
   }
 }
 
-// ⚡ Cron job: run 5 times per hour
-// This runs at minute 0, 12, 24, 36, 48 of every hour
-cron.schedule('0,12,24,36,48 * * * *', () => {
+// ⚡ Cron job: run every 5 seconds
+// Syntax: 'second minute hour day month weekday'
+// ⚡ Cron job: run every 5 minutes
+// This runs at minute 0, 5, 10, 15, ..., 55 of every hour
+cron.schedule('*/10 * * * *', () => {
   fetchAndSend();
   console.log('Cron job triggered at', new Date().toLocaleTimeString());
 });
