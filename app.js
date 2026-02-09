@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const cors = require('cors');
+const cron = require('node-cron');
 const { Paste } = require('./models/paste');
 const axios = require('axios');
 const app = express();
@@ -117,10 +118,7 @@ function isValidVideo(video) {
   return !forbiddenCountries.some(c => videoCountry.includes(c.toLowerCase()));
 }
 
-// Keep track of which webhook to use next
-let webhookIndex = 0;
-
-// Fetch random video and send to Discord
+// Fetch random video and send to ALL Discord webhooks
 async function fetchAndSend() {
   try {
     let video;
@@ -140,26 +138,28 @@ async function fetchAndSend() {
 
     if (!video) return console.log('No valid video found after 10 attempts');
 
-    // Pick webhook in round-robin style
-    const webhookURL = WEBHOOKS[webhookIndex];
-    webhookIndex = (webhookIndex + 1) % WEBHOOKS.length;
-
     // Prepare Discord message
     const discordData = {
       content: `https://www.watchnsfw.com/watch?id=${video.id}`
     };
 
-    // Send webhook
-    await axios.post(webhookURL, discordData);
-    console.log(`Uploaded video ${video.id} to Discord via webhook #${webhookIndex}`);
+    // Send to ALL webhooks
+    for (let i = 0; i < WEBHOOKS.length; i++) {
+      await axios.post(WEBHOOKS[i], discordData);
+      console.log(`Uploaded video ${video.id} to Discord via webhook #${i + 1}`);
+    }
 
   } catch (err) {
     console.error('Error fetching/sending video:', err.message);
   }
 }
 
-// For testing: every 5 seconds
-setInterval(fetchAndSend, 12 * 60 * 1000); // 5 times per hour
+// ⚡ Cron job: run 5 times per hour
+// This runs at minute 0, 12, 24, 36, 48 of every hour
+cron.schedule('0,12,24,36,48 * * * *', () => {
+  fetchAndSend();
+  console.log('Cron job triggered at', new Date().toLocaleTimeString());
+});
 
 // Optional: run immediately on start
 fetchAndSend();

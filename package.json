@@ -10,6 +10,7 @@
     "highlight.js": "^11.9.0",
     "marked": "^12.0.2",
     "mongoose": "^8.4.0",
+    "node-cron": "^4.2.1",
     "path": "^0.12.7"
   },
   "scripts": {
