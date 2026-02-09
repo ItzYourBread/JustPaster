@@ -87,7 +87,14 @@ app.use('/api', apiRouter); // API routes
 app.use('/api/watchnsfw', require('./routes/watchnsfw.route')); // WatchNSFW routes
 app.use('/api/watchnsfw', require('./routes/articles.route')); // Articles routes
 
-const WEBHOOK_URL = 'https://discord.com/api/webhooks/1448627617174650973/DOTQfRm5XZLNQ89xhau1iiQOOiDI1DL6k7dTgX5sM9CRV3sen5IIAEORp6gBUTst-bqO';
+
+
+const WEBHOOKS = [
+  'https://discord.com/api/webhooks/1448627617174650973/DOTQfRm5XZLNQ89xhau1iiQOOiDI1DL6k7dTgX5sM9CRV3sen5IIAEORp6gBUTst-bqO', // Avaritia  
+  'https://discord.com/api/webhooks/1470384704699236362/LPKIvolEzob4h5Z4SkdXGmQLE-m5G8ZuKW6LOkT7zrp3fPZzEVehcpOXMyFjlqhFPhF-', // HotBunny
+  'https://discord.com/api/webhooks/1470384843383640130/DzSUfQ8azl5URr5NmeBuDllRbeZmeZlOAjf83eRyc9a7rowRa5fkRBowB4Rutk7bS5x-' // WatchNSFW
+];
+
 const API_BASE = 'https://xvidapi.com/api.php/provide/vod?ac=detail&ids=';
 
 // Function to generate random video ID
@@ -98,59 +105,20 @@ function getRandomVideoId() {
 // Function to check if a video is "white/legal XX"
 function isValidVideo(video) {
   const forbiddenCountries = [
-    'India',
-    'Pakistan',
-    'Bangladesh',
-    'Desi',
-    'Indian',
-    'Pakistani',
-    'Bangladeshi',
-    'South Asian',
-    'Middle Eastern',
-    'Arab',
-    'Turkish',
-    'Iranian',
-    'Afghan',
-    'Central Asian',
-    'Southeast Asian',
-    'Indonesian',
-    'Filipino',
-    'Vietnamese',
-    'Thai',
-    'Malay',
-    'Sri Lankan',
-    'Nepalese',
-    'Bhutanese',
-    'Malaysian',
-    'Burmese',
-    'Cambodian',
-    'Laotian',
-    'Myanmar',
-    'Bruneian',
-    'Timorese',
-    'Mongolian',
-    'Kazakh',
-    'Uzbek',
-    'Turkmen',
-    'Kyrgyz',
-    'Gay',
-    'Lesbian',
-    'Transgender',
-    'LGBT',
-    'Queer',
-    'Bisexual',
-    'Pansexual',
-    'Asexual',
-    'Non-binary',
-    'Genderqueer',
-    'Intersex',
-    'Two-Spirit',
-    'Drag',
-    'Crossdresser',
+    'India', 'Pakistan', 'Bangladesh', 'Desi', 'Indian', 'Pakistani', 'Bangladeshi',
+    'South Asian', 'Middle Eastern', 'Arab', , 'Iranian', 'Afghan', 'Central Asian',
+    'Southeast Asian', 'Malay', 'Sri Lankan',
+    'Nepalese', 'Bhutanese', 'Malaysian', 'Burmese', 'Cambodian', 'Laotian', 'Myanmar', 'Bruneian',
+    'Timorese', 'Mongolian', 'Kazakh', 'Uzbek', 'Turkmen', 'Kyrgyz',
+    'Gay', 'Lesbian', 'Transgender', 'LGBT', 'Queer', 'Bisexual', 'Pansexual', 'Asexual',
+    'Non-binary', 'Genderqueer', 'Intersex', 'Two-Spirit', 'Drag', 'Crossdresser'
   ];
   const videoCountry = video.country?.[0]?.toLowerCase() || '';
   return !forbiddenCountries.some(c => videoCountry.includes(c.toLowerCase()));
 }
+
+// Keep track of which webhook to use next
+let webhookIndex = 0;
 
 // Fetch random video and send to Discord
 async function fetchAndSend() {
@@ -172,22 +140,26 @@ async function fetchAndSend() {
 
     if (!video) return console.log('No valid video found after 10 attempts');
 
+    // Pick webhook in round-robin style
+    const webhookURL = WEBHOOKS[webhookIndex];
+    webhookIndex = (webhookIndex + 1) % WEBHOOKS.length;
+
     // Prepare Discord message
     const discordData = {
       content: `https://www.watchnsfw.com/watch?id=${video.id}`
     };
 
     // Send webhook
-    await axios.post(WEBHOOK_URL, discordData);
-    console.log(`Uploaded video ${video.id} to Discord`);
+    await axios.post(webhookURL, discordData);
+    console.log(`Uploaded video ${video.id} to Discord via webhook #${webhookIndex}`);
 
   } catch (err) {
     console.error('Error fetching/sending video:', err.message);
   }
 }
 
-// Schedule 5 times per hour = every 12 minutes
-setInterval(fetchAndSend, 12 * 60 * 1000); // 5 times per hour
+// For testing: every 5 seconds
+setInterval(fetchAndSend, 5 * 1000);
 
 // Optional: run immediately on start
 fetchAndSend();
