@@ -151,7 +151,7 @@ async function fetchAndSend() {
   }
 }
 
-// This runs at minute 0, 5, 10, 15, ..., 55 of every hour
+// This runs at minute 0, 5, 10, 15, ..., 55 of every hour xx
 // Run every 5 seconds (5000 milliseconds)
 setInterval(() => {
   fetchAndSend();
