@@ -151,14 +151,12 @@ async function fetchAndSend() {
   }
 }
 
-// ⚡ Cron job: run every 5 seconds
-// Syntax: 'second minute hour day month weekday'
-// ⚡ Cron job: run every 5 minutes
 // This runs at minute 0, 5, 10, 15, ..., 55 of every hour
-cron.schedule('*/10 * * * *', () => {
+// Run every 5 seconds (5000 milliseconds)
+setInterval(() => {
   fetchAndSend();
-  console.log('Cron job triggered at', new Date().toLocaleTimeString());
-});
+  console.log('Task triggered at', new Date().toLocaleTimeString());
+}, 30000);
 
 // Optional: run immediately on start
 fetchAndSend();
