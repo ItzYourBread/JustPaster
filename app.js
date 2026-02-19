@@ -137,7 +137,7 @@ async function fetchAndSend() {
 
     // Prepare Discord message
     const discordData = {
-      content: `https://www.watchnsfw.com/watch?id=${video.id}`
+      content: `https://www.watchnsfw.com/watch/${video.id}`
     };
 
     // Send to ALL webhooks
