@@ -4,13 +4,13 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const cors = require('cors');
-const cron = require('node-cron');
 const { Paste } = require('./models/paste');
 const axios = require('axios');
 const app = express();
 
 // Import routes
-const apiRouter = require('./routes/api');
+const indexRouter = require('./routes/index');
+const apiRouter = require('./routes/api')
 
 dotenv.config();
 
