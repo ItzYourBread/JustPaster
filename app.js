@@ -10,7 +10,6 @@ const axios = require('axios');
 const app = express();
 
 // Import routes
-const indexRouter = require('./routes/index');
 const apiRouter = require('./routes/api');
 
 dotenv.config();
@@ -85,11 +84,10 @@ mongoose.connect(process.env.MONGO_URL)
 // Routes
 app.use('/', indexRouter); // Public-facing routes
 app.use('/api', apiRouter); // API routes
-app.use('/api/watchnsfw', require('./routes/articles.route')); // Articles routes
 
 const WEBHOOKS = [
   // 'https://discord.com/api/webhooks/1448627617174650973/DOTQfRm5XZLNQ89xhau1iiQOOiDI1DL6k7dTgX5sM9CRV3sen5IIAEORp6gBUTst-bqO', // Avaritia  
-  'https://discord.com/api/webhooks/1474107144088322072/yrfNnsz1mz1EQjL6BoLOPRa8XSymTLMp2DFP9FnMawsHaoOjuv5EaXz2bIY5rZyDsmMi' // HotBunny
+  'https://discord.com/api/webhooks/1487749974002368602/vdg0YvIOVojxLP-Pvzyd2nmcsTn_36hWJr1p6q2yvl_Mbi2cSE3j9KPrQiuaaR-KeogY' // HotBunny
   // 'https://discord.com/api/webhooks/1470384843383640130/DzSUfQ8azl5URr5NmeBuDllRbeZmeZlOAjf83eRyc9a7rowRa5fkRBowB4Rutk7bS5x-' // WatchNSFW
 ];
 
