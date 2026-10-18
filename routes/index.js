@@ -3,7 +3,7 @@ const router = express.Router();
 const { Paste } = require('../models/paste');
 const { LinkShortener } = require('../models/linkShortener');
 const { validateShortUrl } = require('../utils/shortUrl');
-const siteUrl = new URL(process.env.SITE_URL || 'https://justpaster.co').origin;
+const siteUrl = new URL(process.env.SITE_URL || 'https://www.justpaster.xyz').origin;
 
 router.get('/', (req, res) => {
     res.render('index', { siteUrl });

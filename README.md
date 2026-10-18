@@ -1,42 +1,79 @@
 # JustPaster
 
-JustPaster is a small, self-hosted pastebin and URL shortener for sharing text and links. It uses Express, EJS, and MongoDB, with no user accounts.
+[JustPaster](https://www.justpaster.xyz/) is a lightweight, self-hosted pastebin and URL shortener. Share text, code, notes, or links with a simple URL—no account required.
+
+JustPaster is open source and welcomes bug reports, ideas, and contributions.
 
 ## Features
 
-- Create a shareable paste without an account
-- Optionally protect paste editing with a private permission code
-- Create up to 50 pastes per bulk API request
-- Shorten HTTP and HTTPS URLs with a shareable redirect link
-- Preserve pasted text exactly and display it without executing HTML
-- Copy the text or link, share a QR code, and view a simple view count
-- Create and retrieve pastes through a small JSON API
+- Create and share text pastes without an account
+- Optionally protect paste edits with a private edit code
+- Shorten absolute HTTP and HTTPS URLs
+- Create and retrieve pastes through a JSON API
+- Create up to 50 pastes in one bulk API request
+- Copy paste contents and links, generate QR codes, and view paste view counts
+- Preserve pasted content as text rather than executing submitted HTML
+- Self-host with Node.js and MongoDB
 
-Pastes are public to anyone who has their link. An edit code only protects changes; it does not hide or encrypt paste contents. Pastes are not automatically deleted. Do not paste secrets or sensitive personal information.
+## Important privacy note
+
+Pastes are public to anyone who has the link. An edit code only protects changes; it does not hide, encrypt, or limit access to paste contents. Pastes are not automatically deleted. Do not paste passwords, secrets, or sensitive personal information.
 
 ## Requirements
 
 - Node.js 18.11 or newer
-- MongoDB, local or hosted
+- MongoDB (local or hosted)
 
 ## Run locally
 
+Clone the repository and install its dependencies:
+
 ```sh
+git clone https://github.com/ItzYourBread/JustPaster.co.git
+cd JustPaster.co
 npm install
+```
+
+Create your local environment file:
+
+```sh
 cp .env.example .env
 ```
 
-Set `MONGO_URL` in `.env` to your MongoDB connection string. Then run:
+Set `MONGO_URL` in `.env` to your MongoDB connection string. The example value uses a local MongoDB instance. Then start JustPaster:
 
 ```sh
 npm start
 ```
 
-The app listens on `http://localhost:3000` by default. Set `PORT` to choose a different port. Run the focused unit tests with `npm test`.
+Open [http://localhost:3000](http://localhost:3000). For automatic restarts while developing, run:
 
-## API
+```sh
+npm run dev
+```
 
-Create a paste:
+Run the test suite with:
+
+```sh
+npm test
+```
+
+## Configuration
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `MONGO_URL` | Yes | — | MongoDB connection string |
+| `PORT` | No | `3000` | Port for the web server |
+| `SITE_URL` | No | `https://www.justpaster.xyz` | Public site origin used in canonical URLs, the sitemap, and `robots.txt` |
+| `JUSTPASTER_URL` | No | `http://localhost:3000` | Base URL used by the `jpAPI.js` Node.js client |
+
+For a self-hosted deployment, set `SITE_URL` to your public origin. Keep `.env` private; it is excluded from Git.
+
+## HTTP API
+
+All API routes are prefixed with `/api`. Send JSON requests with the `Content-Type: application/json` header. API errors use a JSON object with an `error` field.
+
+### Create a paste
 
 ```http
 POST /api/paste
@@ -45,42 +82,65 @@ Content-Type: application/json
 {"content":"Hello, world!"}
 ```
 
-A successful request returns `201` and a JSON object containing the paste `id`. Content must be non-empty and no larger than 1 MiB in UTF-8.
-You can optionally include an `editCode` between 8 and 128 characters. The code is stored as a salted hash and is required to edit that paste.
+An optional `editCode` (8–128 characters) lets its holder update the paste later. The code is stored as a salted hash.
 
-Edit a protected paste:
+```json
+{"content":"A note I may update","editCode":"example-private-code"}
+```
+
+On success, the API returns `201 Created`:
+
+```json
+{"id":"PTabcdefgh"}
+```
+
+Paste content must be non-empty and no larger than 1 MiB in UTF-8. Open a paste at `/{id}`.
+
+### Edit a protected paste
 
 ```http
 POST /api/paste/{id}/edit
 Content-Type: application/json
 
-{"content":"Updated text","editCode":"a-private-code"}
+{"content":"Updated text","editCode":"example-private-code"}
 ```
 
-Bulk create up to 50 pastes in one request (the JSON request body is limited to 8 MiB by default). Every item must be valid or the request is rejected:
+On success, the API returns:
+
+```json
+{"id":"PTabcdefgh","updated":true}
+```
+
+Only pastes created with an edit code can be edited through this endpoint.
+
+### Create pastes in bulk
+
+Send between 1 and 50 pastes. The entire request body is limited to 8 MiB, and the request is rejected if any item is invalid.
 
 ```http
 POST /api/pastes/bulk
 Content-Type: application/json
 
-{"pastes":[{"content":"First paste"},{"content":"Second paste","editCode":"a-private-code"}]}
+{"pastes":[{"content":"First paste"},{"content":"Second paste","editCode":"example-private-code"}]}
 ```
 
-The response contains the created IDs in input order:
+The response lists IDs in the same order as the input:
 
 ```json
 {"pastes":[{"id":"PTabcdefgh"},{"id":"PTijklmnop"}]}
 ```
 
-The `jpAPI.js` Node client also exposes `createPastes([{ content }])` and `createPaste(content, editCode)` for scripts. Set `JUSTPASTER_URL` to your server's base URL before using it.
-
-Read a paste's view count:
+### Read a paste's view count
 
 ```http
 GET /api/paste/{id}/views
 ```
 
-Shorten a URL:
+```json
+{"views":3}
+```
+
+### Shorten a URL
 
 ```http
 POST /api/shorten
@@ -89,17 +149,67 @@ Content-Type: application/json
 {"originalUrl":"https://example.com/a/long/link"}
 ```
 
-A successful request returns `201` with the new `id` and a relative `shortUrl` path. Open that path on the JustPaster host to redirect to the destination. Only absolute HTTP and HTTPS URLs are accepted; URLs containing credentials are rejected. Short-link IDs use the `LS` prefix followed by eight alphanumeric characters.
+Only absolute HTTP and HTTPS URLs are accepted; URLs containing credentials are rejected. On success, the API returns `201 Created`:
 
-The browser view is available at `/{id}`. IDs use the `PT` prefix followed by eight alphanumeric characters.
+```json
+{"id":"LSabcdefgh","shortUrl":"/LSabcdefgh"}
+```
 
-## Configuration
+Open the returned path on your JustPaster host to redirect to the destination URL.
 
-- `MONGO_URL` (required): MongoDB connection string
-- `PORT` (optional): HTTP port; defaults to `3000`
-- `SITE_URL` (optional): public site origin used for canonical URLs, sitemap, and robots metadata; defaults to `https://justpaster.co`
-- `JUSTPASTER_URL` (optional): base URL for the `jpAPI.js` Node client; defaults to `http://localhost:3000`
+### IDs and limits
+
+- Paste IDs use the format `PT` followed by eight letters or digits.
+- Short-link IDs use the format `LS` followed by eight letters or digits.
+- Paste content is limited to 1 MiB in UTF-8.
+- Bulk requests accept at most 50 pastes and have an 8 MiB JSON body limit.
+
+## Node.js client
+
+The included [`jpAPI.js`](./jpAPI.js) module provides helpers for common API operations:
+
+```js
+const justPaster = require('./jpAPI');
+
+const pasteId = await justPaster.createPaste('Hello from a script');
+const pasteIds = await justPaster.createPastes([
+  { content: 'First paste' },
+  { content: 'Protected paste', editCode: 'example-private-code' }
+]);
+const shortUrl = await justPaster.shortenUrl('https://example.com/');
+
+console.log({ pasteId, pasteIds, shortUrl });
+```
+
+The client also exposes `editPaste(id, content, editCode)` and `getPasteViews(id)`. Set `JUSTPASTER_URL` in the environment when using a server other than `http://localhost:3000`.
+
+## Project layout
+
+```text
+app.js                 Express application and server startup
+routes/                Web pages and JSON API
+models/                MongoDB models
+utils/                 Content, URL, and edit-code validation
+views/                 EJS page templates
+public/                Static assets and styles
+jpAPI.js               Node.js API client
+test/                  Automated tests
+```
+
+## Contributing
+
+Contributions of all sizes are welcome, including bug fixes, documentation improvements, and focused feature proposals.
+
+1. Check existing issues or open one to discuss a larger change before starting.
+2. Fork the repository and create a branch for your change.
+3. Make a focused change that fits the existing project structure and conventions.
+4. Run `npm test` and confirm the tests pass.
+5. Open a pull request with a clear summary, motivation, and any relevant testing notes.
+
+For bug reports, include steps to reproduce, expected behavior, actual behavior, and relevant environment details. Please do not include credentials, private paste contents, or other sensitive information.
+
+If you discover a security issue, avoid posting exploit details or sensitive information in a public issue. Use GitHub's private vulnerability reporting for this repository if it is enabled.
 
 ## License
 
-JustPaster is available under the MIT License. See [LICENSE](LICENSE).
+JustPaster is distributed under the [MIT License](./LICENSE).

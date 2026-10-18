@@ -88,13 +88,13 @@ test('paste view escapes submitted HTML instead of executing it', async () => {
   const html = await ejs.renderFile(template, {
     paste: { _id: 'PTabcdefgh', views: 1, content: '<script>alert(1)</script>' },
     canEdit: false,
-    siteUrl: 'https://justpaster.co'
+    siteUrl: 'https://www.justpaster.xyz'
   });
 
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   assert.match(html, /<meta name="robots" content="noindex, follow">/);
-  assert.match(html, /<link rel="canonical" href="https:\/\/justpaster\.co\/PTabcdefgh">/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/www\.justpaster\.xyz\/PTabcdefgh">/);
 });
 
 test('home page renders and API returns useful validation errors', async () => {
@@ -104,7 +104,7 @@ test('home page renders and API returns useful validation errors', async () => {
     assert.equal(homeResponse.status, 200);
     assert.match(homeHtml, /<title>Free Pastebin &amp; URL Shortener \| JustPaster<\/title>/);
     assert.match(homeHtml, /<meta name="description" content="A free pastebin and URL shortener/);
-    assert.match(homeHtml, /<link rel="canonical" href="https:\/\/justpaster\.co\/">/);
+    assert.match(homeHtml, /<link rel="canonical" href="https:\/\/www\.justpaster\.xyz\/">/);
     assert.match(homeHtml, /JustPaster/);
     assert.match(homeHtml, /Short link/);
     assert.match(homeHtml, /id="createShortLinkForm"/);
@@ -114,12 +114,12 @@ test('home page renders and API returns useful validation errors', async () => {
     assert.equal(robotsResponse.status, 200);
     const robotsText = await robotsResponse.text();
     assert.match(robotsText, /Disallow: \/api\//);
-    assert.match(robotsText, /Sitemap: https:\/\/justpaster\.co\/sitemap\.xml/);
+    assert.match(robotsText, /Sitemap: https:\/\/www\.justpaster\.xyz\/sitemap\.xml/);
 
     const sitemapResponse = await fetch(`${baseUrl}/sitemap.xml`);
     assert.equal(sitemapResponse.status, 200);
     const sitemapText = await sitemapResponse.text();
-    assert.match(sitemapText, /<loc>https:\/\/justpaster\.co\/<\/loc>/);
+    assert.match(sitemapText, /<loc>https:\/\/www\.justpaster\.xyz\/<\/loc>/);
 
     const emptyPasteResponse = await fetch(`${baseUrl}/api/paste`, {
       method: 'POST',
