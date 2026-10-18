@@ -1,118 +1,67 @@
 const express = require('express');
 const router = express.Router();
-const { LinkShortener } = require('../models/linkShortener');
 const { Paste } = require('../models/paste');
-const PremiumKey = require('../models/premiumKey');
-const rewardsConfig = require('../rewardsConfig.json');
-const { marked } = require('marked');
-const crypto = require('crypto');
+const { LinkShortener } = require('../models/linkShortener');
+const { validateShortUrl } = require('../utils/shortUrl');
+const siteUrl = new URL(process.env.SITE_URL || 'https://justpaster.co').origin;
 
-
-// Helper function to generate a random key
-function generatePremiumKey() {
-    return crypto.randomBytes(8).toString('hex'); // Generates a 32-character random key
-}
-
-// Routes
 router.get('/', (req, res) => {
-    res.render('index');
+    res.render('index', { siteUrl });
 });
 
-router.get('/getKey/:serverName/step1', async (req, res) => {
-    const { serverName } = req.params;
-    const config = rewardsConfig[serverName];
-
-    if (!config) {
-        return res.status(404).send('Invalid server name');
-    }
-
-    const referrer = req.get('Referrer') || '';
-    if (!referrer.startsWith(config.domain)) {
-        // Referrer validation failed, redirect to 1of2 URL
-        return res.redirect(config['1of2']);
-    }
-
-    // Render the dynamic card for the next step
-    res.render('getKey', { redirectURL: `/getKey/${serverName}/step2` });
+router.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send([
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /api/',
+        `Sitemap: ${siteUrl}/sitemap.xml`
+    ].join('\n'));
 });
 
-
-// Step 2: Validate completion and generate key
-router.get('/getKey/:serverName/step2', async (req, res) => {
-    const { serverName } = req.params;
-    const config = rewardsConfig[serverName];
-
-    if (!config) {
-        return res.status(404).send('Invalid server name');
-    }
-
-    const referrer = req.get('Referrer') || '';
-    if (!referrer.startsWith(config.domain)) {
-        // Referrer validation failed, redirect to 2of2 URL
-        return res.redirect(config['2of2']);
-    }
-
-    // Generate and store the premium key
-    const generatedKey = generatePremiumKey();
-    const newKey = new PremiumKey({ serverName, generatedKey });
-    await newKey.save();
-
-    // Redirect to granted route with the generated key
-    res.redirect(`/getKey/${serverName}/granted?key=${generatedKey}`);
+router.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml').send(
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+        `<url><loc>${siteUrl}/</loc></url>` +
+        '</urlset>'
+    );
 });
 
-// Step 3: Display the generated key
-router.get('/getKey/:serverName/granted', async (req, res) => {
-    const { serverName } = req.params;
-    const { key } = req.query;
+router.get('/:id', async (req, res, next) => {
+    if (/^LS[A-Za-z0-9]{8}$/.test(req.params.id)) {
+        try {
+            const shortLink = await LinkShortener.findByIdAndUpdate(
+                req.params.id,
+                { $inc: { clickCount: 1 } },
+                { new: true }
+            );
 
-    const config = rewardsConfig[serverName];
-    if (!config) {
-        return res.status(404).send('Invalid server name');
-    }
-
-    const existingKey = await PremiumKey.findOne({ serverName, generatedKey: key });
-    if (!existingKey) {
-        return res.status(404).send('Invalid or expired key');
-    }
-
-    res.render('granted', { key });
-});
-
-
-// Route to handle redirection for both short links and pastes
-router.get('/:id', async (req, res) => {
-    const { id } = req.params;
-
-    if (id.startsWith('LS')) {
-        // Handle Link Shortener
-        const shortenedUrl = await LinkShortener.findById(id); 
-
-        if (shortenedUrl) {
-            // Increment click count
-            shortenedUrl.clickCount++;
-            await shortenedUrl.save();
-
-            // Redirect to the original URL
-            res.redirect(shortenedUrl.originalUrl);
-        } else {
-            res.status(404).send('Shortened URL not found');
+            if (!shortLink) return res.status(404).send('Short link not found');
+            if (validateShortUrl(shortLink.originalUrl)) {
+                return res.status(410).send('This short link is unavailable');
+            }
+            return res.redirect(302, new URL(shortLink.originalUrl).toString());
+        } catch (error) {
+            return next(error);
         }
-    } else if (id.startsWith('PT')) {
-        // Handle Paste
-        const paste = await Paste.findById(id);
+    }
 
-        if (paste) {
-            paste.views++;
-            await paste.save();
+    if (!/^PT[A-Za-z0-9]{8}$/.test(req.params.id)) {
+        return res.status(404).send('Paste not found');
+    }
 
-            res.render('paste', { paste: paste, content: marked(paste.content) });
-        } else {
-            res.status(404).send('Paste not found');
-        }
-    } else {
-        // Handle invalid ID format
-        res.status(400).send('Invalid ID format');
+    try {
+        const paste = await Paste.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } },
+            { new: true }
+        ).select('+editCodeHash');
+
+        if (!paste) return res.status(404).send('Paste not found');
+        res.set('X-Robots-Tag', 'noindex, follow');
+        res.render('paste', { paste, canEdit: Boolean(paste.editCodeHash), siteUrl });
+    } catch (error) {
+        next(error);
     }
 });
 

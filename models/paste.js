@@ -1,24 +1,25 @@
 const mongoose = require('mongoose');
+const { randomInt } = require('crypto');
 
-// Generate a random ID of 6 characters, prefixed with "PT"
-function generateId(length) {
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'PT'; 
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
+const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+function generatePasteId() {
+    let id = 'PT';
+    for (let index = 0; index < 8; index++) {
+        id += characters[randomInt(characters.length)];
     }
-    return result;
+    return id;
 }
 
 const pasteSchema = new mongoose.Schema({
-    _id: { type: String, default: () => generateId(8) },
-    content: String,
+    _id: { type: String, default: generatePasteId },
+    content: { type: String, required: true },
+    editCodeSalt: { type: String, select: false },
+    editCodeHash: { type: String, select: false },
     createdAt: { type: Date, default: Date.now },
-    views: { type: Number, default: 0 },
-    antiBypass: { type: Boolean, default: false },
-    redirectUrl: { type: String, default: '' }
+    views: { type: Number, default: 0 }
 }, { _id: false });
 
 const Paste = mongoose.model('Paste', pasteSchema);
 
-module.exports = { Paste };
+module.exports = { Paste, generatePasteId };

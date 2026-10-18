@@ -2,86 +2,116 @@ const express = require('express');
 const router = express.Router();
 const { Paste } = require('../models/paste');
 const { LinkShortener } = require('../models/linkShortener');
-const PremiumKey = require('../models/premiumKey');
+const { validatePasteContent } = require('../utils/pasteContent');
+const { validateShortUrl } = require('../utils/shortUrl');
+const { validateEditCode, hashEditCode, verifyEditCode } = require('../utils/editCode');
 
-// API to check the validity of a premium key
-router.get('/getKey/:serverName/check', async (req, res) => {
-    const { serverName } = req.params;
-    const { key } = req.query;
+function validatePasteInput(input) {
+    const contentError = validatePasteContent(input?.content);
+    if (contentError) return contentError;
+    return validateEditCode(input?.editCode);
+}
 
-    if (!key) {
-        return res.status(400).json({ error: 'Key is required' });
-    }
+function isPasteId(id) {
+    return /^PT[A-Za-z0-9]{8}$/.test(id);
+}
 
-    const existingKey = await PremiumKey.findOne({ serverName, generatedKey: key });
-    if (existingKey) {
-        res.json({ valid: true, message: 'Key is valid' });
-    } else {
-        res.status(400).json({ valid: false, message: 'Key is invalid or not found' });
-    }
-});
-
-// API to remove a premium key
-router.delete('/getKey/:serverName/remove', async (req, res) => {
-    const { serverName } = req.params;
-    const { key } = req.body;
-
-    if (!key) {
-        return res.status(400).json({ error: 'Key is required' });
-    }
-
-    const deletedKey = await PremiumKey.findOneAndDelete({ serverName, generatedKey: key });
-
-    if (deletedKey) {
-        res.json({ success: true, message: 'Key successfully removed' });
-    } else {
-        res.status(404).json({ success: false, message: 'Key not found' });
-    }
-});
-
-// REST API for creating pastes
 router.post('/paste', async (req, res) => {
-    const newPaste = new Paste({ content: req.body.content });
-    await newPaste.save();
-    res.json({ id: newPaste.id });
-});
+    const input = req.body || {};
+    const validationError = validatePasteInput(input);
+    if (validationError) {
+        return res.status(validationError.status).json({ error: validationError.error });
+    }
 
-// REST API for retrieving paste views
-router.get('/paste/:id/views', async (req, res) => {
-    const paste = await Paste.findById(req.params.id);
-    if (paste) {
-        res.json({ views: paste.views });
-    } else {
-        res.status(404).send('Paste not found');
+    try {
+        const editCredentials = input.editCode ? await hashEditCode(input.editCode) : {};
+        const paste = await Paste.create({ content: input.content, ...editCredentials });
+        res.status(201).json({ id: paste.id });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to create paste' });
     }
 });
 
-// REST API to enable/disable anti-bypass and set redirect URL
-router.post('/paste/:id/anti-bypass', async (req, res) => {
-    const paste = await Paste.findById(req.params.id);
-    if (paste) {
-        paste.antiBypass = req.body.antiBypass;
-        paste.redirectUrl = req.body.redirectUrl;
+router.post('/pastes/bulk', async (req, res) => {
+    const pastes = req.body?.pastes;
+    if (!Array.isArray(pastes) || pastes.length < 1 || pastes.length > 50) {
+        return res.status(400).json({ error: 'Provide between 1 and 50 pastes' });
+    }
+
+    for (const paste of pastes) {
+        const validationError = validatePasteInput(paste);
+        if (validationError) {
+            return res.status(validationError.status).json({ error: validationError.error });
+        }
+    }
+
+    try {
+        const records = [];
+        for (const paste of pastes) {
+            records.push({
+                content: paste.content,
+                ...(paste.editCode ? await hashEditCode(paste.editCode) : {})
+            });
+        }
+        const created = await Paste.insertMany(records);
+        res.status(201).json({ pastes: created.map((paste) => ({ id: paste.id })) });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to create pastes' });
+    }
+});
+
+router.post('/paste/:id/edit', async (req, res) => {
+    if (!isPasteId(req.params.id)) return res.status(404).json({ error: 'Paste not found' });
+
+    const input = req.body || {};
+    const contentError = validatePasteContent(input.content);
+    if (contentError) return res.status(contentError.status).json({ error: contentError.error });
+    const editCodeError = validateEditCode(input.editCode);
+    if (editCodeError) return res.status(editCodeError.status).json({ error: editCodeError.error });
+
+    try {
+        const paste = await Paste.findById(req.params.id).select('+editCodeSalt +editCodeHash');
+        if (!paste) return res.status(404).json({ error: 'Paste not found' });
+        if (!paste.editCodeHash) return res.status(403).json({ error: 'This paste does not have an edit code' });
+        if (!await verifyEditCode(input.editCode, paste.editCodeSalt, paste.editCodeHash)) {
+            return res.status(403).json({ error: 'Edit code is incorrect' });
+        }
+
+        paste.content = input.content;
         await paste.save();
-        res.json({ message: 'Anti-bypass settings updated' });
-    } else {
-        res.status(404).send('Paste not found');
+        res.json({ id: paste.id, updated: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to update paste' });
     }
 });
 
-// Route to shorten any URL
 router.post('/shorten', async (req, res) => {
-    const { originalUrl } = req.body;
-
-    if (!originalUrl) {
-        return res.status(400).json({ error: 'Original URL is required' });
+    const { originalUrl } = req.body || {};
+    const validationError = validateShortUrl(originalUrl);
+    if (validationError) {
+        return res.status(validationError.status).json({ error: validationError.error });
     }
 
-    const shortenedUrl = new LinkShortener({ originalUrl });
-    await shortenedUrl.save();
+    try {
+        const shortLink = await LinkShortener.create({ originalUrl: new URL(originalUrl.trim()).toString() });
+        res.status(201).json({ id: shortLink.id, shortUrl: `/${shortLink.id}` });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to shorten URL' });
+    }
+});
 
-    const shortUrl = `${shortenedUrl._id}`;
-    res.json({ shortUrl });
+router.get('/paste/:id/views', async (req, res) => {
+    if (!/^PT[A-Za-z0-9]{8}$/.test(req.params.id)) {
+        return res.status(404).json({ error: 'Paste not found' });
+    }
+
+    try {
+        const paste = await Paste.findById(req.params.id).select('views');
+        if (!paste) return res.status(404).json({ error: 'Paste not found' });
+        res.json({ views: paste.views });
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to retrieve paste views' });
+    }
 });
 
 module.exports = router;

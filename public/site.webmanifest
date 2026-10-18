@@ -1,0 +1,26 @@
+{
+  "name": "JustPaster",
+  "short_name": "JustPaster",
+  "description": "Free pastebin and URL shortener for sharing text, code, notes, and links.",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#101713",
+  "background_color": "#101713",
+  "display": "standalone"
+}

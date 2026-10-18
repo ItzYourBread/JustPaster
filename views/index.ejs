@@ -1,62 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JustPaster</title>
-  <link rel="stylesheet" href="/style.css" />
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101713">
+  <meta name="description" content="A free pastebin and URL shortener. Share text, code, notes, and long links instantly with a simple link — no account needed.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= siteUrl %>/">
+  <title>Free Pastebin &amp; URL Shortener | JustPaster</title>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="JustPaster">
+  <meta property="og:url" content="<%= siteUrl %>/">
+  <meta property="og:title" content="Free Pastebin &amp; URL Shortener | JustPaster">
+  <meta property="og:description" content="Share text, code, notes, and long links instantly with a simple link. No account needed.">
+  <meta property="og:image" content="<%= siteUrl %>/logo-w1200.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="437">
+  <meta property="og:image:alt" content="JustPaster">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Free Pastebin &amp; URL Shortener | JustPaster">
+  <meta name="twitter:description" content="Share text, code, notes, and long links instantly with a simple link. No account needed.">
+  <meta name="twitter:image" content="<%= siteUrl %>/logo-w1200.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
-  <div class="main-wrapper">
-    <div class="content-card">
-      
-      <div class="brand-header">
-        <a href="/">JustPaster</a>
-        <p>Minimalist code & text sharing.</p>
+  <main class="main-wrapper">
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="JustPaster home">
+        <img class="logo-image" src="/logo-w800.png" srcset="/logo-w400.png 400w, /logo-w800.png 800w, /logo-w1200.png 1200w, /logo-w2400.png 2400w" sizes="(max-width: 640px) 58vw, 224px" alt="JustPaster" width="400" height="146" fetchpriority="high">
+      </a>
+      <span class="header-note">A quiet place for your text</span>
+    </header>
+
+    <section class="editor-shell" aria-labelledby="editor-title">
+      <div class="mode-switch" role="group" aria-label="Choose what to create">
+        <button type="button" class="mode-button" data-mode="paste" aria-pressed="true">Paste</button>
+        <button type="button" class="mode-button" data-mode="short-link" aria-pressed="false">Short link</button>
       </div>
 
-      <form id="createPasteForm">
-        <textarea name="content" placeholder="// Paste your content here..." required spellcheck="false"></textarea>
-        <button type="submit" class="btn btn-primary btn-block">Create Paste</button>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow" id="modeEyebrow">NEW PASTE</p>
+          <h1 id="editor-title">Put it into words.</h1>
+        </div>
+        <span class="privacy-note"><span class="status-dot"></span>No account needed</span>
+      </div>
+
+      <div class="mode-panel" id="pastePanel">
+        <form id="createPasteForm">
+          <label class="sr-only" for="pasteContent">Paste content</label>
+          <textarea id="pasteContent" name="content" placeholder="Write or paste anything..." required spellcheck="false" maxlength="1048576" autofocus></textarea>
+          <details class="edit-code-options">
+            <summary>Protect editing with a code</summary>
+            <label class="sr-only" for="editCode">Edit permission code</label>
+            <input class="link-input" type="password" id="editCode" name="editCode" minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters">
+            <span class="field-hint">Only someone with this code can change the paste. Keep it somewhere safe.</span>
+          </details>
+          <div class="editor-footer">
+            <span id="characterCount" class="character-count">0 characters</span>
+            <button type="submit" class="btn btn-primary" id="createButton">
+              <span>Create paste</span><span aria-hidden="true">&#8594;</span>
+            </button>
+          </div>
+          <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <form id="createShortLinkForm" class="mode-panel short-link-form" hidden>
+        <label class="field-label" for="originalUrl">Destination URL</label>
+        <div class="link-input-row">
+          <input class="link-input" type="url" id="originalUrl" name="originalUrl" placeholder="https://example.com/a/long/link" maxlength="2048" autocomplete="url" required>
+          <button type="submit" class="btn btn-primary" id="shortenButton"><span>Shorten URL</span><span aria-hidden="true">&#8594;</span></button>
+        </div>
+        <p id="shortLinkMessage" class="form-message" role="status" aria-live="polite"></p>
+        <div id="shortLinkResult" class="short-link-result" hidden>
+          <label class="field-label" for="shortUrlOutput">Your short link</label>
+          <div class="link-input-row">
+            <input class="link-input short-url-output" type="text" id="shortUrlOutput" readonly>
+            <button type="button" class="btn btn-secondary" id="copyShortLinkButton">Copy link</button>
+          </div>
+        </div>
       </form>
+    </section>
 
-    </div>
+    <section class="intro-section" aria-labelledby="intro-title">
+      <div class="intro-copy">
+        <p class="eyebrow">MADE FOR SHARING</p>
+        <h2 id="intro-title">A simple pastebin for text and links</h2>
+        <p>Share code snippets, notes, and long URLs in seconds. JustPaster is a free pastebin and URL shortener that turns what you share into a clean link — no account or setup required.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-mark" aria-hidden="true">&lt;/&gt;</span>
+          <h3>Share text &amp; code</h3>
+          <p>Keep formatting intact and share a paste with one link.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-mark" aria-hidden="true">&#8599;</span>
+          <h3>Shorten long URLs</h3>
+          <p>Turn a lengthy web address into a compact link.</p>
+        </article>
+        <article class="feature-card">
+          <span class="feature-mark" aria-hidden="true">&#9673;</span>
+          <h3>Simple by design</h3>
+          <p>No account to create. Paste, share, and get on with it.</p>
+        </article>
+      </div>
+    </section>
 
-    <div class="footer-simple">
-      &copy; JustPaster &bull; Encrypted & Private
-    </div>
-  </div>
-
-  <div id="toast" class="toast">Paste Created!</div>
+    <footer class="site-footer"><span>JustPaster</span><span>Text, shared simply.</span></footer>
+  </main>
 
   <script>
-    $(document).ready(function () {
-      $('#createPasteForm').on('submit', function (event) {
-        event.preventDefault();
-        const btn = $('button[type="submit"]');
-        const originalText = btn.text();
-        
-        // Visual feedback
-        btn.text('Creating...').css('opacity', '0.7');
+    const form = document.getElementById('createPasteForm');
+    const contentField = document.getElementById('pasteContent');
+    const createButton = document.getElementById('createButton');
+    const characterCount = document.getElementById('characterCount');
+    const formMessage = document.getElementById('formMessage');
+    const editCodeField = document.getElementById('editCode');
+    const modeButtons = document.querySelectorAll('.mode-button');
+    const shortLinkForm = document.getElementById('createShortLinkForm');
+    const shortLinkMessage = document.getElementById('shortLinkMessage');
+    const shortLinkResult = document.getElementById('shortLinkResult');
+    const shortUrlOutput = document.getElementById('shortUrlOutput');
+    const shortenButton = document.getElementById('shortenButton');
 
-        const content = $("textarea[name='content']").val();
-
-        $.ajax({
-          url: '/api/paste',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ content }),
-          success: function (response) {
-            window.location.href = `/${response.id}`;
-          },
-          error: function () {
-            alert("Error creating paste.");
-            btn.text(originalText).css('opacity', '1');
-          }
-        });
+    function setMode(mode) {
+      const isPasteMode = mode === 'paste';
+      document.getElementById('pastePanel').hidden = !isPasteMode;
+      shortLinkForm.hidden = isPasteMode;
+      document.getElementById('modeEyebrow').textContent = isPasteMode ? 'NEW PASTE' : 'SHORT LINK';
+      document.getElementById('editor-title').textContent = isPasteMode ? 'Put it into words.' : 'Make a long link shorter.';
+      modeButtons.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
       });
+      if (!isPasteMode) document.getElementById('originalUrl').focus();
+    }
+
+    modeButtons.forEach((button) => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+
+    contentField.addEventListener('input', () => {
+      const count = contentField.value.length;
+      characterCount.textContent = `${count.toLocaleString()} ${count === 1 ? 'character' : 'characters'}`;
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      createButton.disabled = true;
+      createButton.querySelector('span').textContent = 'Creating...';
+      formMessage.textContent = '';
+
+      try {
+        const response = await fetch('/api/paste', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: contentField.value, editCode: editCodeField.value || undefined })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to create paste.');
+        window.location.assign(`/${encodeURIComponent(result.id)}`);
+      } catch (error) {
+        formMessage.textContent = error.message;
+        createButton.disabled = false;
+        createButton.querySelector('span').textContent = 'Create paste';
+      }
+    });
+
+    shortLinkForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!shortLinkForm.reportValidity()) return;
+
+      shortenButton.disabled = true;
+      shortenButton.querySelector('span').textContent = 'Shortening...';
+      shortLinkMessage.textContent = '';
+      shortLinkResult.hidden = true;
+
+      try {
+        const response = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ originalUrl: document.getElementById('originalUrl').value })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to shorten URL.');
+        shortUrlOutput.value = new URL(result.shortUrl, window.location.origin).toString();
+        shortLinkResult.hidden = false;
+        shortLinkMessage.textContent = 'Short link created.';
+      } catch (error) {
+        shortLinkMessage.textContent = error.message;
+      } finally {
+        shortenButton.disabled = false;
+        shortenButton.querySelector('span').textContent = 'Shorten URL';
+      }
+    });
+
+    document.getElementById('copyShortLinkButton').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shortUrlOutput.value);
+        shortLinkMessage.textContent = 'Short link copied.';
+      } catch {
+        shortUrlOutput.select();
+        shortLinkMessage.textContent = 'Select and copy the short link.';
+      }
     });
   </script>
 </body>

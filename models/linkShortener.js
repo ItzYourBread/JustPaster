@@ -1,17 +1,18 @@
 const mongoose = require('mongoose');
+const { randomInt } = require('crypto');
 
-// Generate a random ID of 6 characters, prefixed with "LS"
-function generateLinkId(length) {
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'LS'; 
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
+const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+function generateShortLinkId() {
+    let id = 'LS';
+    for (let index = 0; index < 8; index++) {
+        id += characters[randomInt(characters.length)];
     }
-    return result;
+    return id;
 }
 
 const linkShortenerSchema = new mongoose.Schema({
-    _id: { type: String, default: () => generateLinkId(8) },
+    _id: { type: String, default: generateShortLinkId },
     originalUrl: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     clickCount: { type: Number, default: 0 }
@@ -19,4 +20,4 @@ const linkShortenerSchema = new mongoose.Schema({
 
 const LinkShortener = mongoose.model('LinkShortener', linkShortenerSchema);
 
-module.exports = { LinkShortener };
+module.exports = { LinkShortener, generateShortLinkId };
