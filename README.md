@@ -29,8 +29,8 @@ Pastes are public to anyone who has the link. An edit code only protects changes
 Clone the repository and install its dependencies:
 
 ```sh
-git clone https://github.com/ItzYourBread/JustPaster.co.git
-cd JustPaster.co
+git clone https://github.com/ItzYourBread/JustPaster.git
+cd JustPaster
 npm install
 ```
 
